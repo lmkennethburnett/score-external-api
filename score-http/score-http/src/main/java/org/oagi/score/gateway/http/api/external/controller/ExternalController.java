@@ -201,7 +201,7 @@ public class ExternalController {
     }
 
 
-/*
+
     @RequestMapping(value = "/ext/bie_list",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -268,6 +268,6 @@ public class ExternalController {
         request.setPageRequest(pageRequest);
         return service.getBieList(request);
     }
-    */
+    
 
 }

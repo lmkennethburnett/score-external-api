@@ -147,7 +147,7 @@ public class ExternalService {
         }
     }
 
-     public PageResponse<BieList> getBieList(AuthenticatedPrincipal user, BieListRequest request) {
+     public PageResponse<BieList> getBieList( BieListRequest request) {
         PageRequest pageRequest = request.getPageRequest();
         
         PaginationResponse<BieList> result = bieRepository.selectBieLists()
