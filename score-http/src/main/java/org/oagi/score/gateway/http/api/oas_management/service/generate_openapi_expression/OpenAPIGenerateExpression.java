@@ -948,7 +948,10 @@ public class OpenAPIGenerateExpression implements BieGenerateOpenApiExpression, 
         }
 
         if (option.isBieDefinition()) {
-            String definition = abie.definition();
+            String definition = asbiep.definition();
+            if (!StringUtils.hasLength(definition)) {
+                definition = abie.definition();
+            }
             if (StringUtils.hasLength(definition)) {
                 properties.put("description", definition);
             }

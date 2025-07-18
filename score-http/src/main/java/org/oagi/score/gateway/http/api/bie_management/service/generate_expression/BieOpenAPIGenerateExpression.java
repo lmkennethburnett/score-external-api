@@ -673,7 +673,10 @@ public class BieOpenAPIGenerateExpression implements BieGenerateExpression, Init
         }
 
         if (option.isBieDefinition()) {
-            String definition = abie.definition();
+            String definition = asbiep.definition();
+            if (!StringUtils.hasLength(definition)) {
+                definition = abie.definition();
+            }
             if (StringUtils.hasLength(definition)) {
                 properties.put("description", definition);
             }
