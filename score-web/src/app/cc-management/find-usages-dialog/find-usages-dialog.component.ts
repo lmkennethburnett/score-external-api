@@ -7,6 +7,9 @@ import {CcNodeService} from '../domain/core-component-node.service';
 import {forkJoin} from 'rxjs';
 import {CcGraph, CcGraphNode} from '../domain/core-component-node';
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {PreferencesInfo} from '../../settings-management/settings-preferences/domain/preferences';
+import {SettingsPreferencesService} from '../../settings-management/settings-preferences/domain/settings-preferences.service';
+import {AuthService} from '../../authentication/auth.service';
 
 
 class FindUsagesCcFlatNodeDatabase<T extends CcFlatNode> extends CcFlatNodeDatabase<T> {
@@ -101,6 +104,8 @@ export class FindUsagesDialogComponent implements OnInit {
   selectedNode: CcFlatNode;
   cursorNode: CcFlatNode;
 
+  preferencesInfo: PreferencesInfo;
+
   hasBasedAcc: boolean;
 
   @ViewChild('virtualScroll', {static: true}) public virtualScroll: CdkVirtualScrollViewport;
@@ -114,16 +119,29 @@ export class FindUsagesDialogComponent implements OnInit {
     return 1000000 * this.virtualScrollItemSize;
   }
 
+  get browserMode(): boolean {
+    if (!this.preferencesInfo) {
+      return false;
+    }
+
+    return this.preferencesInfo.viewSettingsInfo.pageSettings.browserViewMode;
+  }
+
   constructor(private dialogRef: MatDialogRef<FindUsagesDialogComponent>,
               private service: FindUsagesDialogService,
               private ccNodeService: CcNodeService,
+              private auth: AuthService,
+              private preferencesService: SettingsPreferencesService,
               @Inject(MAT_DIALOG_DATA) public data: any) {
   }
 
   ngOnInit(): void {
     forkJoin([
-      this.service.findUsages(this.data.type, this.data.manifestId)
-    ]).subscribe(([findUsagesResp]) => {
+      this.service.findUsages(this.data.type, this.data.manifestId),
+      this.preferencesService.load(this.auth.getUserToken())
+    ]).subscribe(([findUsagesResp, preferencesInfo]) => {
+      this.preferencesInfo = preferencesInfo;
+
       const edge = findUsagesResp.graph.edges[findUsagesResp.rootNodeKey];
       const sizeOfNodes: number = (!!edge) ? edge.targets.length : 0;
       if (!sizeOfNodes) {
@@ -182,7 +200,9 @@ export class FindUsagesDialogComponent implements OnInit {
   }
 
   openCoreComponent(node: CcFlatNode) {
-    window.open('/core_component/' + node.type.toLowerCase() + '/' + node.manifestId, '_blank');
+    window.open('/core_component/' +
+        ((node.type.toUpperCase() === 'ASCCP' && this.browserMode) ? 'browser/' : '') +
+        node.type.toLowerCase() + '/' + node.manifestId, '_blank');
   }
 
   onNoClick(): void {
