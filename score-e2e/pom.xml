@@ -19,16 +19,16 @@
         <slf4j.version>2.0.17</slf4j.version>
         <log4j.version>2.24.3</log4j.version>
         <jackson.version>2.19.0</jackson.version>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
         <commons-math3.version>3.6.1</commons-math3.version>
-        <commons-io.version>2.19.0</commons-io.version>
+        <commons-io.version>2.20.0</commons-io.version>
         <commons-csv.version>1.14.0</commons-csv.version>
         <lombok.version>1.18.38</lombok.version>
         <awaitility.version>4.3.0</awaitility.version>
         <snakeyaml.version>2.4</snakeyaml.version>
-        <mariadb-client.version>3.5.3</mariadb-client.version>
+        <mariadb-client.version>3.5.4</mariadb-client.version>
         <hikariCP.version>6.3.0</hikariCP.version>
-        <jOOQ.version>3.20.3</jOOQ.version>
+        <jOOQ.version>3.20.5</jOOQ.version>
         <jOOQ.configuration.skip>true</jOOQ.configuration.skip>
     </properties>
 
