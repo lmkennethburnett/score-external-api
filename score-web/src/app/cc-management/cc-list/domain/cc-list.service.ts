@@ -58,7 +58,7 @@ export class CcListService {
   getCcList(request: CcListRequest): Observable<PageResponse<CcListEntry>> {
     let params = new HttpParams()
       .set('libraryId', '' + request.library.libraryId)
-      .set('releaseId', '' + request.release.releaseId);
+      .set('releaseId', '' + (request.release?.releaseId || 0));
 
     if (!!request.page.sortActive && !!request.page.sortDirection) {
       params = params.set('orderBy', ((request.page.sortDirection === 'desc') ? '-' : '+') + request.page.sortActive);

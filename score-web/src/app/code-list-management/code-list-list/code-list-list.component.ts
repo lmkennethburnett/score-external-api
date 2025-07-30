@@ -334,20 +334,20 @@ export class CodeListListComponent implements OnInit {
   initReleases(releases: ReleaseSummary[]) {
     this.releases = [...releases];
     if (this.releases.length > 0) {
-      if (this.request.release.releaseId === 0) {
+      if (this.request.release?.releaseId === 0) {
         const savedReleaseId = loadBranch(this.auth.getUserToken(), this.request.cookieType);
         if (savedReleaseId) {
           this.request.release = this.releases.filter(e => e.releaseId === savedReleaseId)[0];
           if (!this.request.release) {
             this.request.release = this.releases[0];
-            saveBranch(this.auth.getUserToken(), this.request.cookieType, this.request.release.releaseId);
+            saveBranch(this.auth.getUserToken(), this.request.cookieType, this.request.release?.releaseId);
           }
         }
       } else {
-        this.request.release = this.releases.filter(e => e.releaseId === this.request.release.releaseId)[0];
+        this.request.release = this.releases.filter(e => e.releaseId === this.request.release?.releaseId)[0];
       }
     }
-    if (!this.request.release || this.request.release.releaseId === 0) {
+    if (!this.request.release || this.request.release?.releaseId === 0) {
       this.request.release = this.releases[0];
     }
     initFilter(this.releaseListFilterCtrl, this.filteredReleaseList, this.releases, (e) => e.releaseNum);
@@ -438,7 +438,7 @@ export class CodeListListComponent implements OnInit {
 
   createCodeList() {
     this.loading = true;
-    this.service.create(this.request.release.releaseId)
+    this.service.create(this.request.release?.releaseId)
       .subscribe(resp => {
         this.snackBar.open('Created', '', {
           duration: 3000,
@@ -452,14 +452,14 @@ export class CodeListListComponent implements OnInit {
   get showCreateCodeListBtn(): boolean {
     const userToken = this.auth.getUserToken();
     if (userToken.roles.includes('developer')) {
-      if (!this.request.release.workingRelease) {
+      if (!this.request.release?.workingRelease) {
         return false;
       }
     } else {
-      if (this.request.release.workingRelease) {
+      if (this.request.release?.workingRelease) {
         return false;
       } else {
-        return this.request.release.state === 'Published';
+        return this.request.release?.state === 'Published';
       }
     }
     return true;
