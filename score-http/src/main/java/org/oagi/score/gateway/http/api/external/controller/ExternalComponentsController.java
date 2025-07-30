@@ -285,7 +285,7 @@ public class ExternalComponentsController {
                         @RequestParam(name = "guid", required = true) String guid)
                         throws Exception {
 
-                AsccpManifestId asccpManifestId = service.getAsccpManifestIdByGuid(service.getReleaseId(libraryName,releaseVersion),guid);
+                AsccpManifestId asccpManifestId = service.getAsccpManifestId(service.getReleaseId(libraryName,releaseVersion),guid);
                 if (asccpManifestId==null) {
                         return new ResponseEntity<>("Component not found",HttpStatus.NOT_FOUND);
                 }

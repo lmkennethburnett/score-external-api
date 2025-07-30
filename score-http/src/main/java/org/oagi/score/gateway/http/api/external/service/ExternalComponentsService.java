@@ -69,7 +69,8 @@ public class ExternalComponentsService {
         return releaseId;
     }
 
-    public AsccpManifestId getAsccpManifestIdByGuid(ReleaseId releaseId, String guid) {
+
+    public AsccpManifestId getAsccpManifestId(ReleaseId releaseId, String guid) {
 
         AsccpManifestId asccpManifestId = dslContext.select(
                 ASCCP_MANIFEST.ASCCP_MANIFEST_ID)
