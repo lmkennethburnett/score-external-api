@@ -13,9 +13,9 @@ import {AuthService} from '../../authentication/auth.service';
 import {MaterialModule} from '../../material.module';
 import {ConfirmDialogModule} from '../../common/confirm-dialog/confirm-dialog.module';
 import {ScoreCommonModule} from '../../common/score-common.module';
-import {PlantUmlDiagramComponent} from '../plantuml-diagram/plantuml-diagram.component';
-import {PlantUmlService} from '../plantuml-diagram/domain/plantuml.service';
+import {CcPlantumlDiagramComponent} from '../cc-plantuml-diagram/cc-plantuml-diagram.component';
 import {MarkdownModule} from 'ngx-markdown';
+import {CcPlantumlDiagramModule} from '../cc-plantuml-diagram/cc-plantuml-diagram.module';
 
 const routes: Routes = [
   {
@@ -23,7 +23,7 @@ const routes: Routes = [
     children: [
       {
         path: 'plantuml',
-        component: PlantUmlDiagramComponent,
+        component: CcPlantumlDiagramComponent,
         canActivate: [AuthService],
       },
       {
@@ -50,14 +50,11 @@ const routes: Routes = [
     NgxMatSelectSearchModule,
     AngularSplitModule,
     MarkdownModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    CcPlantumlDiagramModule
   ],
   declarations: [
-    ModelBrowserComponent,
-    PlantUmlDiagramComponent
-  ],
-  providers: [
-    PlantUmlService
+    ModelBrowserComponent
   ]
 })
 export class ModelBrowserModule {
