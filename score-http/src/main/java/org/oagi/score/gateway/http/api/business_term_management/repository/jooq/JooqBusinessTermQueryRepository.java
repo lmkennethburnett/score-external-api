@@ -832,16 +832,7 @@ public class JooqBusinessTermQueryRepository
                     TOP_LEVEL_ASBIEP.STATE,
 
                     ASBIE.CREATION_TIMESTAMP.as("creation_timestamp"),
-                    ASBIE.LAST_UPDATE_TIMESTAMP.as("last_update_timestamp"),
-
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state")));
+                    ASBIE.LAST_UPDATE_TIMESTAMP.as("last_update_timestamp")));
             if (hasLength(filterCriteria.den())) {
                 fields.add(
                         val(1).minus(levenshtein(lower(ASCCP.PROPERTY_TERM), val(filterCriteria.den().toLowerCase()))
@@ -850,7 +841,7 @@ public class JooqBusinessTermQueryRepository
                 );
             }
 
-            return dslContext().selectDistinct(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().selectDistinct(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(ASBIE)
                     .join(ASBIEP).on(ASBIE.TO_ASBIEP_ID.eq(ASBIEP.ASBIEP_ID))
                     .join(ASCC_MANIFEST).on(ASBIE.BASED_ASCC_MANIFEST_ID.eq(ASCC_MANIFEST.ASCC_MANIFEST_ID))
@@ -858,11 +849,11 @@ public class JooqBusinessTermQueryRepository
                     .join(ASCCP_MANIFEST).on(ASCC_MANIFEST.TO_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(TOP_LEVEL_ASBIEP).on(ASBIE.OWNER_TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASBIE.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .join(BIZ_CTX_ASSIGNMENT).on(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(BIZ_CTX_ASSIGNMENT.TOP_LEVEL_ASBIEP_ID))
                     .join(BIZ_CTX).on(BIZ_CTX_ASSIGNMENT.BIZ_CTX_ID.eq(BIZ_CTX.BIZ_CTX_ID))
                     .leftJoin(TENANT_BUSINESS_CTX).on(BIZ_CTX.BIZ_CTX_ID.eq(TENANT_BUSINESS_CTX.BIZ_CTX_ID));
@@ -998,16 +989,7 @@ public class JooqBusinessTermQueryRepository
                     TOP_LEVEL_ASBIEP.STATE,
 
                     BBIE.CREATION_TIMESTAMP.as("creation_timestamp"),
-                    BBIE.LAST_UPDATE_TIMESTAMP.as("last_update_timestamp"),
-
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state")));
+                    BBIE.LAST_UPDATE_TIMESTAMP.as("last_update_timestamp")));
             if (hasLength(filterCriteria.den())) {
                 fields.add(
                         val(1).minus(levenshtein(lower(BCCP.PROPERTY_TERM), val(filterCriteria.den().toLowerCase()))
@@ -1016,7 +998,7 @@ public class JooqBusinessTermQueryRepository
                 );
             }
 
-            return dslContext().selectDistinct(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().selectDistinct(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(BBIE)
                     .join(BBIEP).on(BBIE.TO_BBIEP_ID.eq(BBIEP.BBIEP_ID))
                     .join(BCC_MANIFEST).on(BBIE.BASED_BCC_MANIFEST_ID.eq(BCC_MANIFEST.BCC_MANIFEST_ID))
@@ -1026,11 +1008,11 @@ public class JooqBusinessTermQueryRepository
                     .join(TOP_LEVEL_ASBIEP).on(BBIE.OWNER_TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .join(ASBIEP).on(TOP_LEVEL_ASBIEP.ASBIEP_ID.eq(ASBIEP.ASBIEP_ID))
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BBIE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BBIE.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .join(BIZ_CTX_ASSIGNMENT).on(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(BIZ_CTX_ASSIGNMENT.TOP_LEVEL_ASBIEP_ID))
                     .join(BIZ_CTX).on(BIZ_CTX_ASSIGNMENT.BIZ_CTX_ID.eq(BIZ_CTX.BIZ_CTX_ID))
                     .leftJoin(TENANT_BUSINESS_CTX).on(BIZ_CTX.BIZ_CTX_ID.eq(TENANT_BUSINESS_CTX.BIZ_CTX_ID));
@@ -1276,12 +1258,7 @@ public class JooqBusinessTermQueryRepository
                 return new AsbieBbieListEntryRecord(
                         record.getValue("type", String.class),
 
-                        new LibrarySummaryRecord(
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(LIBRARY.NAME.as("library_name")),
-                                record.get(LIBRARY.STATE.as("library_state")),
-                                (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                        ),
+                        fetchLibrarySummary(record),
                         new ReleaseSummaryRecord(
                                 new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                                 new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),

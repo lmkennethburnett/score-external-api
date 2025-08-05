@@ -53,16 +53,18 @@ public class JooqLibraryQueryRepository extends JooqBaseRepository implements Li
             return dslContext().select(LIBRARY.LIBRARY_ID,
                             LIBRARY.NAME,
                             LIBRARY.STATE,
-                            LIBRARY.IS_READ_ONLY)
+                            LIBRARY.IS_READ_ONLY,
+                            LIBRARY.IS_DEFAULT)
                     .from(LIBRARY);
         }
 
         RecordMapper<Record, LibrarySummaryRecord> mapper() {
             return record -> new LibrarySummaryRecord(
-                    new LibraryId(record.getValue(LIBRARY.LIBRARY_ID).toBigInteger()),
-                    record.getValue(LIBRARY.NAME),
-                    record.getValue(LIBRARY.STATE),
-                    record.getValue(LIBRARY.IS_READ_ONLY) == (byte) 1
+                    new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
+                    record.get(LIBRARY.NAME),
+                    record.get(LIBRARY.STATE),
+                    record.get(LIBRARY.IS_READ_ONLY) == (byte) 1,
+                    record.get(LIBRARY.IS_DEFAULT) == (byte) 1
             );
         }
     }
@@ -80,7 +82,8 @@ public class JooqLibraryQueryRepository extends JooqBaseRepository implements Li
         SelectOnConditionStep<? extends Record> select() {
             return dslContext().select(concat(fields(
                             LIBRARY.LIBRARY_ID, LIBRARY.TYPE, LIBRARY.NAME, LIBRARY.ORGANIZATION, LIBRARY.DESCRIPTION,
-                            LIBRARY.LINK, LIBRARY.DOMAIN, LIBRARY.STATE, LIBRARY.IS_READ_ONLY,
+                            LIBRARY.LINK, LIBRARY.DOMAIN, LIBRARY.STATE,
+                            LIBRARY.IS_READ_ONLY, LIBRARY.IS_DEFAULT,
                             LIBRARY.CREATION_TIMESTAMP, LIBRARY.LAST_UPDATE_TIMESTAMP
                     ), creatorFields(), updaterFields()))
                     .from(LIBRARY)
@@ -94,6 +97,7 @@ public class JooqLibraryQueryRepository extends JooqBaseRepository implements Li
                     record.get(LIBRARY.TYPE), record.get(LIBRARY.NAME), record.get(LIBRARY.ORGANIZATION), record.get(LIBRARY.DESCRIPTION),
                     record.get(LIBRARY.LINK), record.get(LIBRARY.DOMAIN), record.get(LIBRARY.STATE),
                     record.get(LIBRARY.IS_READ_ONLY) == (byte) 1,
+                    record.get(LIBRARY.IS_DEFAULT) == (byte) 1,
                     new WhoAndWhen(
                             fetchCreatorSummary(record),
                             toDate(record.get(LIBRARY.CREATION_TIMESTAMP))
@@ -121,7 +125,8 @@ public class JooqLibraryQueryRepository extends JooqBaseRepository implements Li
         SelectOnConditionStep<Record> select() {
             return dslContext().select(concat(fields(
                             LIBRARY.LIBRARY_ID, LIBRARY.TYPE, LIBRARY.NAME, LIBRARY.ORGANIZATION, LIBRARY.DESCRIPTION,
-                            LIBRARY.LINK, LIBRARY.DOMAIN, LIBRARY.STATE, LIBRARY.IS_READ_ONLY,
+                            LIBRARY.LINK, LIBRARY.DOMAIN, LIBRARY.STATE,
+                            LIBRARY.IS_READ_ONLY, LIBRARY.IS_DEFAULT,
                             LIBRARY.CREATION_TIMESTAMP, LIBRARY.LAST_UPDATE_TIMESTAMP
                     ), creatorFields(), updaterFields()))
                     .from(LIBRARY)
@@ -239,6 +244,7 @@ public class JooqLibraryQueryRepository extends JooqBaseRepository implements Li
                     record.get(LIBRARY.TYPE), record.get(LIBRARY.NAME), record.get(LIBRARY.ORGANIZATION), record.get(LIBRARY.DESCRIPTION),
                     record.get(LIBRARY.LINK), record.get(LIBRARY.DOMAIN), record.get(LIBRARY.STATE),
                     record.get(LIBRARY.IS_READ_ONLY) == (byte) 1,
+                    record.get(LIBRARY.IS_DEFAULT) == (byte) 1,
                     new WhoAndWhen(
                             fetchCreatorSummary(record),
                             toDate(record.get(LIBRARY.CREATION_TIMESTAMP))

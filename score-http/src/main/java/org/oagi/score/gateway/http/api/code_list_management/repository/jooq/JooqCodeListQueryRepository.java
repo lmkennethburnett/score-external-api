@@ -409,15 +409,6 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                             NAMESPACE.PREFIX,
                             NAMESPACE.IS_STD_NMSP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.LOG_ID,
                             LOG.REVISION_NUM,
                             LOG.REVISION_TRACKING_NUM,
@@ -426,11 +417,11 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
 
                             CODE_LIST_MANIFEST.PREV_CODE_LIST_MANIFEST_ID,
                             CODE_LIST_MANIFEST.NEXT_CODE_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(CODE_LIST_MANIFEST)
                     .join(CODE_LIST).on(CODE_LIST_MANIFEST.CODE_LIST_ID.eq(CODE_LIST.CODE_LIST_ID))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(CODE_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(CODE_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(CODE_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(CODE_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(CODE_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -457,12 +448,7 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                 AgencyIdListValueManifestId agencyIdListValueManifestId =
                         (record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID) != null) ?
                                 new AgencyIdListValueManifestId(record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -581,15 +567,6 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                             NAMESPACE.PREFIX,
                             NAMESPACE.IS_STD_NMSP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.as("prev_log").LOG_ID,
                             LOG.as("prev_log").REVISION_NUM,
                             LOG.as("prev_log").REVISION_TRACKING_NUM,
@@ -598,15 +575,15 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
 
                             CODE_LIST_MANIFEST.PREV_CODE_LIST_MANIFEST_ID,
                             CODE_LIST_MANIFEST.NEXT_CODE_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(CODE_LIST_MANIFEST)
                     .join(CODE_LIST).on(CODE_LIST_MANIFEST.CODE_LIST_ID.eq(CODE_LIST.CODE_LIST_ID))
                     .join(CODE_LIST.as("prev")).on(and(
                             CODE_LIST.PREV_CODE_LIST_ID.eq(CODE_LIST.as("prev").CODE_LIST_ID),
                             CODE_LIST.CODE_LIST_ID.eq(CODE_LIST.as("prev").NEXT_CODE_LIST_ID)
                     ))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(CODE_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(CODE_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(CODE_LIST.as("prev").OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(CODE_LIST.as("prev").CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(CODE_LIST.as("prev").LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -643,12 +620,7 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                 AgencyIdListValueManifestId agencyIdListValueManifestId =
                         (record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID) != null) ?
                                 new AgencyIdListValueManifestId(record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -948,15 +920,6 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                             CODE_LIST.CREATION_TIMESTAMP,
                             CODE_LIST.LAST_UPDATE_TIMESTAMP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.LOG_ID,
                             LOG.REVISION_NUM,
                             LOG.REVISION_TRACKING_NUM,
@@ -965,11 +928,11 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
 
                             CODE_LIST_MANIFEST.PREV_CODE_LIST_MANIFEST_ID,
                             CODE_LIST_MANIFEST.NEXT_CODE_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(CODE_LIST_MANIFEST)
                     .join(CODE_LIST).on(CODE_LIST_MANIFEST.CODE_LIST_ID.eq(CODE_LIST.CODE_LIST_ID))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(CODE_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(CODE_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(CODE_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(CODE_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(CODE_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1144,12 +1107,7 @@ public class JooqCodeListQueryRepository extends JooqBaseRepository implements C
                 AgencyIdListValueManifestId agencyIdListValueManifestId =
                         (record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID) != null) ?
                                 new AgencyIdListValueManifestId(record.get(AGENCY_ID_LIST_VALUE_MANIFEST.AGENCY_ID_LIST_VALUE_MANIFEST_ID).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),

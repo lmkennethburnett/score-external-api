@@ -53,6 +53,7 @@ import static org.oagi.score.gateway.http.common.model.ScoreRole.*;
 import static org.oagi.score.gateway.http.common.model.SortDirection.DESC;
 import static org.oagi.score.gateway.http.common.repository.jooq.entity.Routines.levenshtein;
 import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.*;
+import static org.oagi.score.gateway.http.common.repository.jooq.entity.tables.AgencyIdListManifest.AGENCY_ID_LIST_MANIFEST;
 import static org.springframework.util.StringUtils.hasLength;
 
 public class JooqBieQueryRepository extends JooqBaseRepository implements BieQueryRepository {
@@ -105,15 +106,6 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     ASBIEP.CREATION_TIMESTAMP,
                     TOP_LEVEL_ASBIEP.LAST_UPDATE_TIMESTAMP,
 
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
-
                     TOP_LEVEL_ASBIEP.SOURCE_TOP_LEVEL_ASBIEP_ID,
                     ASCCP_MANIFEST.as("source_asccp_manifest").DEN.as("source_den"),
                     ASBIEP.as("source_asbiep").DISPLAY_NAME.as("source_display_name"),
@@ -140,7 +132,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                 );
             }
 
-            return dslContext().selectDistinct(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().selectDistinct(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(TOP_LEVEL_ASBIEP)
                     .join(ASBIEP).on(and(
                             ASBIEP.OWNER_TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID),
@@ -149,11 +141,11 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     .join(ABIE).on(ASBIEP.ROLE_OF_ABIE_ID.eq(ABIE.ABIE_ID))
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIEP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .join(BIZ_CTX_ASSIGNMENT).on(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(BIZ_CTX_ASSIGNMENT.TOP_LEVEL_ASBIEP_ID))
                     .join(BIZ_CTX).on(BIZ_CTX_ASSIGNMENT.BIZ_CTX_ID.eq(BIZ_CTX.BIZ_CTX_ID))
                     .leftJoin(TENANT_BUSINESS_CTX).on(BIZ_CTX.BIZ_CTX_ID.eq(TENANT_BUSINESS_CTX.BIZ_CTX_ID))
@@ -436,12 +428,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                 var bizCtxQuery = repositoryFactory().businessContextQueryRepository(requester());
 
                 return new BieListEntryRecord(
-                        new LibrarySummaryRecord(
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(LIBRARY.NAME.as("library_name")),
-                                record.get(LIBRARY.STATE.as("library_state")),
-                                (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                        ),
+                        fetchLibrarySummary(record),
                         new ReleaseSummaryRecord(
                                 new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                                 new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -528,15 +515,6 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     ASBIEP.CREATION_TIMESTAMP,
                     TOP_LEVEL_ASBIEP.LAST_UPDATE_TIMESTAMP,
 
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
-
                     TOP_LEVEL_ASBIEP.SOURCE_TOP_LEVEL_ASBIEP_ID,
                     ASCCP_MANIFEST.as("source_asccp_manifest").DEN.as("source_den"),
                     ASBIEP.as("source_asbiep").DISPLAY_NAME.as("source_display_name"),
@@ -563,7 +541,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                 );
             }
 
-            return dslContext().selectDistinct(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().selectDistinct(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(BIE_PACKAGE_TOP_LEVEL_ASBIEP)
                     .join(TOP_LEVEL_ASBIEP).on(BIE_PACKAGE_TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .join(ASBIEP).on(and(
@@ -573,11 +551,11 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     .join(ABIE).on(ASBIEP.ROLE_OF_ABIE_ID.eq(ABIE.ABIE_ID))
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIEP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .join(BIZ_CTX_ASSIGNMENT).on(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(BIZ_CTX_ASSIGNMENT.TOP_LEVEL_ASBIEP_ID))
                     .join(BIZ_CTX).on(BIZ_CTX_ASSIGNMENT.BIZ_CTX_ID.eq(BIZ_CTX.BIZ_CTX_ID))
                     .leftJoin(TENANT_BUSINESS_CTX).on(BIZ_CTX.BIZ_CTX_ID.eq(TENANT_BUSINESS_CTX.BIZ_CTX_ID))
@@ -768,12 +746,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                 var bizCtxQuery = repositoryFactory().businessContextQueryRepository(requester());
 
                 return new BieListEntryRecord(
-                        new LibrarySummaryRecord(
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(LIBRARY.NAME.as("library_name")),
-                                record.get(LIBRARY.STATE.as("library_state")),
-                                (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                        ),
+                        fetchLibrarySummary(record),
                         new ReleaseSummaryRecord(
                                 new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                                 new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),

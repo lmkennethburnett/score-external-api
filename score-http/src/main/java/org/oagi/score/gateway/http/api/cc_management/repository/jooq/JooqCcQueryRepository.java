@@ -44,6 +44,7 @@ import org.oagi.score.gateway.http.common.filter.ContainsFilterBuilder;
 import org.oagi.score.gateway.http.common.model.*;
 import org.oagi.score.gateway.http.common.repository.jooq.JooqBaseRepository;
 import org.oagi.score.gateway.http.common.repository.jooq.RepositoryFactory;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.Tables;
 import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.AccManifestRecord;
 
 import java.math.BigInteger;
@@ -292,12 +293,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 Integer componentType = record.getValue("oagis_component_type", Integer.class);
                 return new CcListEntryRecord(
                         type,
-                        new LibrarySummaryRecord(
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(LIBRARY.NAME.as("library_name")),
-                                record.get(LIBRARY.STATE.as("library_state")),
-                                (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                        ),
+                        fetchLibrarySummary(record),
                         new ReleaseSummaryRecord(
                                 new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                                 new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -412,14 +408,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("ACC").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     ACC_MANIFEST.ACC_MANIFEST_ID.as("manifest_id"),
                     ACC.ACC_ID.as("id"),
@@ -451,12 +439,12 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().select(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().select(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(ACC)
                     .join(ACC_MANIFEST).on(ACC.ACC_ID.eq(ACC_MANIFEST.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(ACC_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(ACC_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(ACC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ACC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ACC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -608,14 +596,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("ASCC").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     ASCC_MANIFEST.ASCC_MANIFEST_ID.as("manifest_id"),
                     ASCC.ASCC_ID.as("id"),
@@ -647,7 +627,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().select(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().select(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(ASCC)
                     .join(ASCC_MANIFEST).on(ASCC.ASCC_ID.eq(ASCC_MANIFEST.ASCC_ID))
                     .join(ACC_MANIFEST)
@@ -657,8 +637,8 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     ))
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(ASCC_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(ASCC_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(ASCC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASCC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASCC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -741,14 +721,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("BCC").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     BCC_MANIFEST.BCC_MANIFEST_ID.as("manifest_id"),
                     BCC.BCC_ID.as("id"),
@@ -780,7 +752,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().select(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().select(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(BCC)
                     .join(BCC_MANIFEST).on(BCC.BCC_ID.eq(BCC_MANIFEST.BCC_ID))
                     .join(ACC_MANIFEST)
@@ -790,8 +762,8 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     ))
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(BCC_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(BCC_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(BCC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BCC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BCC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -872,14 +844,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("ASCCP").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     ASCCP_MANIFEST.ASCCP_MANIFEST_ID.as("manifest_id"),
                     ASCCP.ASCCP_ID.as("id"),
@@ -911,7 +875,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().select(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().select(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(ASCCP)
                     .join(ASCCP_MANIFEST).on(ASCCP.ASCCP_ID.eq(ASCCP_MANIFEST.ASCCP_ID))
                     .join(ACC_MANIFEST)
@@ -921,8 +885,8 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     ))
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ASCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(ASCCP_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(ASCCP_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(ASCCP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASCCP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASCCP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1022,14 +986,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("BCCP").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     BCCP_MANIFEST.BCCP_MANIFEST_ID.as("manifest_id"),
                     BCCP.BCCP_ID.as("id"),
@@ -1061,12 +1017,12 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().select(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().select(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(BCCP)
                     .join(BCCP_MANIFEST).on(BCCP.BCCP_ID.eq(BCCP_MANIFEST.BCCP_ID))
                     .join(LOG).on(BCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(BCCP_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(BCCP_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(BCCP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BCCP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BCCP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1151,14 +1107,6 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
             List<Field<?>> fields = new ArrayList<>();
             fields.addAll(Arrays.asList(
                     inline("DT").as("type"),
-                    LIBRARY.LIBRARY_ID,
-                    LIBRARY.NAME.as("library_name"),
-                    LIBRARY.STATE.as("library_state"),
-                    LIBRARY.IS_READ_ONLY,
-
-                    RELEASE.RELEASE_ID,
-                    RELEASE.RELEASE_NUM,
-                    RELEASE.STATE.as("release_state"),
 
                     DT_MANIFEST.DT_MANIFEST_ID.as("manifest_id"),
                     DT.DT_ID.as("id"),
@@ -1190,12 +1138,12 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 );
             }
 
-            return dslContext().selectDistinct(concat(fields.stream(), ownerFields(), creatorFields(), updaterFields()))
+            return dslContext().selectDistinct(concat(fields.stream(), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(DT)
                     .join(DT_MANIFEST).on(DT.DT_ID.eq(DT_MANIFEST.DT_ID))
                     .join(LOG).on(DT_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
-                    .join(RELEASE).on(DT_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(DT_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(DT.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(DT.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(DT.LAST_UPDATED_BY.eq(updaterTablePk()))

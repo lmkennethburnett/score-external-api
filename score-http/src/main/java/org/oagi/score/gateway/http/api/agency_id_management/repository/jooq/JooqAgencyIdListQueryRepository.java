@@ -496,15 +496,6 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                             NAMESPACE.PREFIX,
                             NAMESPACE.IS_STD_NMSP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.LOG_ID,
                             LOG.REVISION_NUM,
                             LOG.REVISION_TRACKING_NUM,
@@ -513,11 +504,11 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
 
                             AGENCY_ID_LIST_MANIFEST.PREV_AGENCY_ID_LIST_MANIFEST_ID,
                             AGENCY_ID_LIST_MANIFEST.NEXT_AGENCY_ID_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(AGENCY_ID_LIST_MANIFEST)
                     .join(AGENCY_ID_LIST).on(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.AGENCY_ID_LIST_ID))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(AGENCY_ID_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -542,12 +533,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                 AgencyIdListManifestId basedAgencyIdListManifestId =
                         (record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")) != null) ?
                                 new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -670,15 +656,6 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                             NAMESPACE.PREFIX,
                             NAMESPACE.IS_STD_NMSP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.as("prev_log").LOG_ID,
                             LOG.as("prev_log").REVISION_NUM,
                             LOG.as("prev_log").REVISION_TRACKING_NUM,
@@ -687,15 +664,15 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
 
                             AGENCY_ID_LIST_MANIFEST.PREV_AGENCY_ID_LIST_MANIFEST_ID,
                             AGENCY_ID_LIST_MANIFEST.NEXT_AGENCY_ID_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(AGENCY_ID_LIST_MANIFEST)
                     .join(AGENCY_ID_LIST).on(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.AGENCY_ID_LIST_ID))
                     .join(AGENCY_ID_LIST.as("prev")).on(and(
                             AGENCY_ID_LIST.PREV_AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.as("prev").AGENCY_ID_LIST_ID),
                             AGENCY_ID_LIST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.as("prev").NEXT_AGENCY_ID_LIST_ID)
                     ))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(AGENCY_ID_LIST.as("prev").OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.as("prev").CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.as("prev").LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -730,12 +707,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                 AgencyIdListManifestId basedAgencyIdListManifestId =
                         (record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")) != null) ?
                                 new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
@@ -1035,15 +1007,6 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                             AGENCY_ID_LIST.CREATION_TIMESTAMP,
                             AGENCY_ID_LIST.LAST_UPDATE_TIMESTAMP,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"),
-
                             LOG.LOG_ID,
                             LOG.REVISION_NUM,
                             LOG.REVISION_TRACKING_NUM,
@@ -1052,11 +1015,11 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
 
                             AGENCY_ID_LIST_MANIFEST.PREV_AGENCY_ID_LIST_MANIFEST_ID,
                             AGENCY_ID_LIST_MANIFEST.NEXT_AGENCY_ID_LIST_MANIFEST_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(AGENCY_ID_LIST_MANIFEST)
                     .join(AGENCY_ID_LIST).on(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.AGENCY_ID_LIST_ID))
-                    .join(RELEASE).on(RELEASE.RELEASE_ID.eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
                     .join(ownerTable()).on(AGENCY_ID_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1194,12 +1157,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
             return record -> {
                 AgencyIdListManifestId agencyIdListManifestId =
                         new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_MANIFEST_ID).toBigInteger());
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
                 ReleaseSummaryRecord release = new ReleaseSummaryRecord(
                         new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
                         new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),

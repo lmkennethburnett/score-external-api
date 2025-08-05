@@ -13,6 +13,7 @@ import org.oagi.score.gateway.http.api.cc_management.model.bccp.BccpManifestId;
 import org.oagi.score.gateway.http.api.cc_management.model.dt.DtManifestId;
 import org.oagi.score.gateway.http.api.code_list_management.model.CodeListManifestId;
 import org.oagi.score.gateway.http.api.library_management.model.LibraryId;
+import org.oagi.score.gateway.http.api.library_management.repository.LibraryQueryRepository;
 import org.oagi.score.gateway.http.api.namespace_management.model.NamespaceId;
 import org.oagi.score.gateway.http.api.release_management.model.*;
 import org.oagi.score.gateway.http.api.release_management.repository.ReleaseQueryRepository;
@@ -463,6 +464,9 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
 
     @Override
     public AssignComponents getAssignComponents(ReleaseId releaseId) {
+        ReleaseQueryRepository releaseQueryRepository = repositoryFactory().releaseQueryRepository(requester());
+        ReleaseSummaryRecord releaseSummary = releaseQueryRepository.getReleaseSummary(releaseId);
+
         AssignComponents assignComponents = new AssignComponents();
 
         // ACCs
@@ -479,6 +483,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                         .join(APP_USER).on(ACC.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                         .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                         .where(and(
+                                RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                                 or(
                                         RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                         RELEASE.RELEASE_NUM.eq("Working")
@@ -520,6 +525,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                 .join(APP_USER).on(ASCCP.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                 .join(LOG).on(ASCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                 .where(and(
+                        RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                         or(
                                 RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                 RELEASE.RELEASE_NUM.eq("Working")
@@ -561,6 +567,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                 .join(APP_USER).on(BCCP.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                 .join(LOG).on(BCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                 .where(and(
+                        RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                         or(
                                 RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                 RELEASE.RELEASE_NUM.eq("Working")
@@ -602,6 +609,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                 .join(APP_USER).on(CODE_LIST.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                 .join(LOG).on(CODE_LIST_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                 .where(and(
+                        RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                         or(
                                 RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                 RELEASE.RELEASE_NUM.eq("Working")
@@ -643,6 +651,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                 .join(APP_USER).on(AGENCY_ID_LIST.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                 .join(LOG).on(AGENCY_ID_LIST_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                 .where(and(
+                        RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                         or(
                                 RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                 RELEASE.RELEASE_NUM.eq("Working")
@@ -684,6 +693,7 @@ public class JooqReleaseQueryRepository extends JooqBaseRepository implements Re
                 .join(APP_USER).on(DT.OWNER_USER_ID.eq(APP_USER.APP_USER_ID))
                 .join(LOG).on(DT_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                 .where(and(
+                        RELEASE.LIBRARY_ID.eq(valueOf(releaseSummary.libraryId())),
                         or(
                                 RELEASE.RELEASE_ID.eq(valueOf(releaseId)),
                                 RELEASE.RELEASE_NUM.eq("Working")
