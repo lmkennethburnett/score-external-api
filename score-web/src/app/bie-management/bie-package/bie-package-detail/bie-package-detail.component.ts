@@ -442,6 +442,7 @@ export class BiePackageDetailComponent implements OnInit {
 
   isDisabled(biePackage: BiePackage) {
     return (this.disabled) ||
+      (biePackage.name === undefined || biePackage.name === '') ||
       (biePackage.versionId === undefined || biePackage.versionId === '') ||
       (biePackage.versionName === undefined || biePackage.versionName === '') ||
       (biePackage.description === undefined || biePackage.description === '');

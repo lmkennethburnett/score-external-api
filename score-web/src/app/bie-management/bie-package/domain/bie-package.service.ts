@@ -28,6 +28,9 @@ export class BiePackageService {
 
       params = params.set('orderBy', orderBy);
     }
+    if (request.filters.name) {
+      params = params.set('name', request.filters.name);
+    }
     if (request.filters.versionId) {
       params = params.set('versionId', request.filters.versionId);
     }
@@ -172,6 +175,7 @@ export class BiePackageService {
 
   update(biePackage: BiePackageDetails): Observable<any> {
     return this.http.put<any>('/api/bie-packages/' + biePackage.biePackageId, {
+      name: biePackage.name,
       versionId: biePackage.versionId,
       versionName: biePackage.versionName,
       description: biePackage.description

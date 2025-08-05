@@ -33,11 +33,12 @@ public class JooqBiePackageCommandRepository extends JooqBaseRepository implemen
     }
 
     @Override
-    public BiePackageId create(LibraryId libraryId, String versionId, String versionName, String description) {
+    public BiePackageId create(LibraryId libraryId, String name, String versionId, String versionName, String description) {
 
         BiePackageRecord biePackageRecord = new BiePackageRecord();
 
         biePackageRecord.setLibraryId(valueOf(libraryId));
+        biePackageRecord.setName(name);
         biePackageRecord.setVersionId(versionId);
         biePackageRecord.setVersionName(versionName);
         biePackageRecord.setDescription(description);
@@ -59,14 +60,19 @@ public class JooqBiePackageCommandRepository extends JooqBaseRepository implemen
 
     @Override
     public boolean update(BiePackageId biePackageId,
-                          String versionId, String versionName, String description) {
+                          String name, String versionId, String versionName, String description) {
 
         UpdateSetFirstStep<BiePackageRecord> firstStep = dslContext().update(BIE_PACKAGE);
         UpdateSetMoreStep<BiePackageRecord> step;
-        if (hasLength(versionId)) {
-            step = firstStep.set(BIE_PACKAGE.VERSION_ID, versionId);
+        if (hasLength(name)) {
+            step = firstStep.set(BIE_PACKAGE.NAME, name);
         } else {
-            step = firstStep.setNull(BIE_PACKAGE.VERSION_ID);
+            step = firstStep.setNull(BIE_PACKAGE.NAME);
+        }
+        if (hasLength(versionId)) {
+            step = step.set(BIE_PACKAGE.VERSION_ID, versionId);
+        } else {
+            step = step.setNull(BIE_PACKAGE.VERSION_ID);
         }
         if (hasLength(versionName)) {
             step = step.set(BIE_PACKAGE.VERSION_NAME, versionName);

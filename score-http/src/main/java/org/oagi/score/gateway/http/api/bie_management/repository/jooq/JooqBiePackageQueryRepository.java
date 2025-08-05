@@ -38,7 +38,6 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
 
     @Override
     public BiePackageSummaryRecord getBiePackageSummary(BiePackageId biePackageId) {
-
         if (biePackageId == null) {
             return null;
         }
@@ -66,6 +65,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
             return dslContext().selectDistinct(concat(fields(
                             BIE_PACKAGE.BIE_PACKAGE_ID,
                             BIE_PACKAGE.LIBRARY_ID,
+                            BIE_PACKAGE.NAME,
                             BIE_PACKAGE.VERSION_ID,
                             BIE_PACKAGE.VERSION_NAME,
                             BIE_PACKAGE.DESCRIPTION,
@@ -74,8 +74,8 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                             BIE_PACKAGE.STATE
                     ), ownerFields()))
                     .from(BIE_PACKAGE)
+                    .join(libraryTable()).on(libraryTablePk().eq(BIE_PACKAGE.LIBRARY_ID))
                     .join(ownerTable()).on(BIE_PACKAGE.OWNER_USER_ID.eq(ownerTablePk()))
-                    .join(LIBRARY).on(BIE_PACKAGE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .leftJoin(BIE_PACKAGE_TOP_LEVEL_ASBIEP).on(BIE_PACKAGE.BIE_PACKAGE_ID.eq(BIE_PACKAGE_TOP_LEVEL_ASBIEP.BIE_PACKAGE_ID))
                     .leftJoin(TOP_LEVEL_ASBIEP).on(BIE_PACKAGE_TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .leftJoin(RELEASE).on(TOP_LEVEL_ASBIEP.RELEASE_ID.eq(RELEASE.RELEASE_ID));
@@ -109,6 +109,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                 return new BiePackageSummaryRecord(
                         new BiePackageId(record.get(BIE_PACKAGE.BIE_PACKAGE_ID).toBigInteger()),
                         new LibraryId(record.get(BIE_PACKAGE.LIBRARY_ID).toBigInteger()),
+                        record.get(BIE_PACKAGE.NAME),
                         record.get(BIE_PACKAGE.VERSION_ID),
                         record.get(BIE_PACKAGE.VERSION_NAME),
                         record.get(BIE_PACKAGE.DESCRIPTION),
@@ -138,6 +139,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
         SelectOnConditionStep<? extends org.jooq.Record> select() {
             return dslContext().selectDistinct(concat(fields(
                             BIE_PACKAGE.BIE_PACKAGE_ID,
+                            BIE_PACKAGE.NAME,
                             BIE_PACKAGE.LIBRARY_ID,
                             BIE_PACKAGE.VERSION_ID,
                             BIE_PACKAGE.VERSION_NAME,
@@ -149,10 +151,10 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                             BIE_PACKAGE.LAST_UPDATE_TIMESTAMP
                     ), ownerFields(), creatorFields(), updaterFields()))
                     .from(BIE_PACKAGE)
+                    .join(libraryTable()).on(libraryTablePk().eq(BIE_PACKAGE.LIBRARY_ID))
                     .join(ownerTable()).on(BIE_PACKAGE.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BIE_PACKAGE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BIE_PACKAGE.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(LIBRARY).on(BIE_PACKAGE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .leftJoin(BIE_PACKAGE_TOP_LEVEL_ASBIEP).on(BIE_PACKAGE.BIE_PACKAGE_ID.eq(BIE_PACKAGE_TOP_LEVEL_ASBIEP.BIE_PACKAGE_ID))
                     .leftJoin(TOP_LEVEL_ASBIEP).on(BIE_PACKAGE_TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .leftJoin(RELEASE).on(TOP_LEVEL_ASBIEP.RELEASE_ID.eq(RELEASE.RELEASE_ID))
@@ -167,6 +169,9 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
 
             if (filterCriteria.libraryId() != null) {
                 conditions.add(LIBRARY.LIBRARY_ID.eq(valueOf(filterCriteria.libraryId())));
+            }
+            if (hasLength(filterCriteria.name())) {
+                conditions.addAll(contains(filterCriteria.name(), BIE_PACKAGE.NAME));
             }
             if (hasLength(filterCriteria.versionId())) {
                 conditions.addAll(contains(filterCriteria.versionId(), BIE_PACKAGE.VERSION_ID));
@@ -230,6 +235,10 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
 
                     case "branch":
                         field = field("release_num_list");
+                        break;
+
+                    case "name":
+                        field = BIE_PACKAGE.NAME;
                         break;
 
                     case "versionId":
@@ -314,6 +323,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                 return new BiePackageListEntryRecord(
                         new BiePackageId(record.get(BIE_PACKAGE.BIE_PACKAGE_ID).toBigInteger()),
                         new LibraryId(record.get(BIE_PACKAGE.LIBRARY_ID).toBigInteger()),
+                        record.get(BIE_PACKAGE.NAME),
                         record.get(BIE_PACKAGE.VERSION_ID),
                         record.get(BIE_PACKAGE.VERSION_NAME),
                         record.get(BIE_PACKAGE.DESCRIPTION),
@@ -350,6 +360,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
             return dslContext().selectDistinct(concat(fields(
                             BIE_PACKAGE.BIE_PACKAGE_ID,
                             BIE_PACKAGE.LIBRARY_ID,
+                            BIE_PACKAGE.NAME,
                             BIE_PACKAGE.VERSION_ID,
                             BIE_PACKAGE.VERSION_NAME,
                             BIE_PACKAGE.DESCRIPTION,
@@ -359,12 +370,12 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                             BIE_PACKAGE.CREATION_TIMESTAMP,
                             BIE_PACKAGE.LAST_UPDATE_TIMESTAMP,
                             BIE_PACKAGE.SOURCE_BIE_PACKAGE_ID
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                    ), libraryFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(BIE_PACKAGE)
+                    .join(libraryTable()).on(libraryTablePk().eq(BIE_PACKAGE.LIBRARY_ID))
                     .join(ownerTable()).on(BIE_PACKAGE.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BIE_PACKAGE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BIE_PACKAGE.LAST_UPDATED_BY.eq(updaterTablePk()))
-                    .join(LIBRARY).on(BIE_PACKAGE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .leftJoin(BIE_PACKAGE_TOP_LEVEL_ASBIEP).on(BIE_PACKAGE.BIE_PACKAGE_ID.eq(BIE_PACKAGE_TOP_LEVEL_ASBIEP.BIE_PACKAGE_ID))
                     .leftJoin(TOP_LEVEL_ASBIEP).on(BIE_PACKAGE_TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .leftJoin(RELEASE).on(TOP_LEVEL_ASBIEP.RELEASE_ID.eq(RELEASE.RELEASE_ID))
@@ -405,6 +416,7 @@ public class JooqBiePackageQueryRepository extends JooqBaseRepository implements
                 return new BiePackageDetailsRecord(
                         new BiePackageId(record.get(BIE_PACKAGE.BIE_PACKAGE_ID).toBigInteger()),
                         new LibraryId(record.get(BIE_PACKAGE.LIBRARY_ID).toBigInteger()),
+                        record.get(BIE_PACKAGE.NAME),
                         record.get(BIE_PACKAGE.VERSION_ID),
                         record.get(BIE_PACKAGE.VERSION_NAME),
                         record.get(BIE_PACKAGE.DESCRIPTION),

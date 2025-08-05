@@ -271,8 +271,9 @@ export class TableColumnsInfo {
   columnsOfBiePackagePage: TableColumnsProperty[] = [
     {name: 'State', selected: true, width: 104},
     {name: 'Branch', selected: true, width: 100},
-    {name: 'Package Version Name', selected: true, width: 0},
-    {name: 'Package Version ID', selected: true, width: 200},
+    {name: 'Package Name', selected: true, width: 0},
+    {name: 'Version ID', selected: true, width: 160},
+    {name: 'Version Name', selected: true, width: 160},
     {name: 'Owner', selected: true, width: 140},
     {name: 'Description', selected: true, width: '40%'},
     {name: 'Updated On', selected: true, width: 160}

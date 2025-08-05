@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableMap;
 import org.oagi.score.gateway.http.api.agency_id_management.model.AgencyIdListSummaryRecord;
 import org.oagi.score.gateway.http.api.agency_id_management.model.AgencyIdListValueSummaryRecord;
-import org.oagi.score.gateway.http.api.bie_management.model.*;
+import org.oagi.score.gateway.http.api.bie_management.model.BIE;
+import org.oagi.score.gateway.http.api.bie_management.model.BiePackageSummaryRecord;
+import org.oagi.score.gateway.http.api.bie_management.model.Facet;
+import org.oagi.score.gateway.http.api.bie_management.model.TopLevelAsbiepSummaryRecord;
 import org.oagi.score.gateway.http.api.bie_management.model.abie.AbieSummaryRecord;
 import org.oagi.score.gateway.http.api.bie_management.model.asbie.AsbieSummaryRecord;
 import org.oagi.score.gateway.http.api.bie_management.model.asbiep.AsbiepSummaryRecord;
@@ -373,17 +376,20 @@ public class BieJSONGenerateExpression implements BieGenerateExpression, Initial
     }
 
     private void attachBiePackageAttributes(Map<String, Object> properties, Map<String, Object> definitions,
-                                            TopLevelAsbiepSummaryRecord topLevelAsbiep, BiePackage biePackage) {
+                                            TopLevelAsbiepSummaryRecord topLevelAsbiep, BiePackageSummaryRecord biePackage) {
 
         Map<String, Object> newProps = new LinkedHashMap<>();
         List<String> requiredAttrs = new ArrayList<>();
-        if (addAttribute(newProps, definitions, "packageVersionName", biePackage.getVersionName(), "string")) {
-            requiredAttrs.add("packageVersionName");
+        if (addAttribute(newProps, definitions, "packageName", biePackage.name(), "string")) {
+            requiredAttrs.add("packageName");
         }
-        if (addAttribute(newProps, definitions, "packageVersionId", biePackage.getVersionId(), "string")) {
+        if (addAttribute(newProps, definitions, "packageVersionId", biePackage.versionId(), "string")) {
             requiredAttrs.add("packageVersionId");
         }
-        if (addAttribute(newProps, definitions, "packageDescription", biePackage.getDescription(), "string")) {
+        if (addAttribute(newProps, definitions, "packageVersionName", biePackage.versionName(), "string")) {
+            requiredAttrs.add("packageVersionName");
+        }
+        if (addAttribute(newProps, definitions, "packageDescription", biePackage.description(), "string")) {
             requiredAttrs.add("packageDescription");
         }
         if (addAttribute(newProps, definitions, "versionId", topLevelAsbiep.version(), "normalized string")) {
