@@ -66,12 +66,7 @@ public class JooqBlobContentQueryRepository extends JooqBaseRepository implement
                 BlobContentId blobContentId =
                         new BlobContentId(record.get(BLOB_CONTENT.BLOB_CONTENT_ID).toBigInteger());
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 return new BlobContentSummaryRecord(
                         library, release,
 

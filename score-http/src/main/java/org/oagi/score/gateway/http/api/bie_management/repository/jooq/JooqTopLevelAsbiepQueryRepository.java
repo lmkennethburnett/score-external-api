@@ -159,7 +159,7 @@ public class JooqTopLevelAsbiepQueryRepository extends JooqBaseRepository implem
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(TOP_LEVEL_ASBIEP.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(ASBIEP.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY));
@@ -174,12 +174,7 @@ public class JooqTopLevelAsbiepQueryRepository extends JooqBaseRepository implem
                 AsbiepId asbiepId = (record.get(ASBIEP.ASBIEP_ID) != null) ?
                         new AsbiepId(record.get(ASBIEP.ASBIEP_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
 
                 return new TopLevelAsbiepSummaryRecord(library, release,
                         topLevelAsbiepId,

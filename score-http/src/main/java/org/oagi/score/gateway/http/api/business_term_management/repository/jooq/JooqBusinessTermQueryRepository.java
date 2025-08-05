@@ -850,7 +850,7 @@ public class JooqBusinessTermQueryRepository
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(TOP_LEVEL_ASBIEP).on(ASBIE.OWNER_TOP_LEVEL_ASBIEP_ID.eq(TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASBIE.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1009,7 +1009,7 @@ public class JooqBusinessTermQueryRepository
                     .join(ASBIEP).on(TOP_LEVEL_ASBIEP.ASBIEP_ID.eq(ASBIEP.ASBIEP_ID))
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BBIE.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BBIE.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1259,12 +1259,7 @@ public class JooqBusinessTermQueryRepository
                         record.getValue("type", String.class),
 
                         fetchLibrarySummary(record),
-                        new ReleaseSummaryRecord(
-                                new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(RELEASE.RELEASE_NUM),
-                                ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                        ),
+                        fetchReleaseSummary(record),
 
                         bieId,
                         new Guid(record.getValue("guid", String.class)),

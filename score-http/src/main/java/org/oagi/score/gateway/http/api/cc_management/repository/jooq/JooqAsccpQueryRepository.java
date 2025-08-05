@@ -97,7 +97,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                     .from(ASCCP_MANIFEST)
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(ASCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(ASCCP.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(ASCCP.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(ASCCP.LAST_UPDATED_BY))
@@ -113,12 +113,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                 AsccpManifestId replacementAsccpManifestid = (record.get(ASCCP_MANIFEST.REPLACEMENT_ASCCP_MANIFEST_ID) != null) ?
                         new AsccpManifestId(record.get(ASCCP_MANIFEST.REPLACEMENT_ASCCP_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(ASCCP.STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new AsccpDetailsRecord(
@@ -295,7 +290,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                             ASCCP.ASCCP_ID.eq(ASCCP.as("prev").NEXT_ASCCP_ID)
                     ))
                     .join(releaseTable()).on(releaseTablePk().eq(ASCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(ASCCP.as("prev").OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(ASCCP.as("prev").CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(ASCCP.as("prev").LAST_UPDATED_BY))
@@ -321,12 +316,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                 AsccpManifestId replacementAsccpManifestid = (record.get(ASCCP_MANIFEST.REPLACEMENT_ASCCP_MANIFEST_ID) != null) ?
                         new AsccpManifestId(record.get(ASCCP_MANIFEST.REPLACEMENT_ASCCP_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(ASCCP.as("prev").STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new AsccpDetailsRecord(
@@ -483,7 +473,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                     .from(ASCCP_MANIFEST)
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(ASCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(ASCCP.OWNER_USER_ID))
                     .leftJoin(LOG).on(ASCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID));
         }
@@ -494,12 +484,7 @@ public class JooqAsccpQueryRepository extends JooqBaseRepository implements Ascc
                 AccManifestId roleOfAccManifestId = (record.get(ASCCP_MANIFEST.ROLE_OF_ACC_MANIFEST_ID) != null) ?
                         new AccManifestId(record.get(ASCCP_MANIFEST.ROLE_OF_ACC_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 return new AsccpSummaryRecord(
                         library, release,
                         asccpManifestId,

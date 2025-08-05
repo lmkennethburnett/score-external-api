@@ -12,6 +12,9 @@ import org.oagi.score.gateway.http.api.cc_management.model.bcc.BccSummaryRecord;
 import org.oagi.score.gateway.http.api.cc_management.service.SeqKeyHandler;
 import org.oagi.score.gateway.http.api.library_management.model.LibraryId;
 import org.oagi.score.gateway.http.api.library_management.model.LibrarySummaryRecord;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseId;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseState;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseSummaryRecord;
 import org.oagi.score.gateway.http.common.model.Id;
 import org.oagi.score.gateway.http.common.model.ScoreRole;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
@@ -74,24 +77,10 @@ public abstract class JooqBaseRepository {
         return Arrays.stream(fields);
     }
 
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2) {
-        return Stream.of(stream1, stream2).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3) {
-        return Stream.of(stream1, stream2, stream3).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3, Stream<? extends Field<?>> stream4) {
-        return Stream.of(stream1, stream2, stream3, stream4).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3, Stream<? extends Field<?>> stream4, Stream<? extends Field<?>> stream5) {
-        return Stream.of(stream1, stream2, stream3, stream4, stream5).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3, Stream<? extends Field<?>> stream4, Stream<? extends Field<?>> stream5, Stream<? extends Field<?>> stream6) {
-        return Stream.of(stream1, stream2, stream3, stream4, stream5, stream6).flatMap(Function.identity()).toArray(Field[]::new);
+    public final Field<?>[] concat(Stream<? extends Field<?>>... streams) {
+        return Stream.of(streams)
+                .flatMap(Function.identity())
+                .toArray(Field[]::new);
     }
 
     public final Date toDate(LocalDateTime localDateTime) {
@@ -270,6 +259,15 @@ public abstract class JooqBaseRepository {
                 releaseTable().RELEASE_NUM,
                 releaseTable().STATE.as("release_state")
         ).stream();
+    }
+
+    public ReleaseSummaryRecord fetchReleaseSummary(Record record) {
+        return new ReleaseSummaryRecord(
+                new ReleaseId(record.get(releaseTablePk()).toBigInteger()),
+                new LibraryId(record.get(libraryTablePk()).toBigInteger()),
+                record.get(releaseTable().RELEASE_NUM),
+                ReleaseState.valueOf(record.get(releaseTable().STATE.as("release_state")))
+        );
     }
 
 }

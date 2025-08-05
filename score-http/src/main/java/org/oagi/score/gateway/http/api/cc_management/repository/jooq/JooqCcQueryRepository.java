@@ -294,12 +294,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                 return new CcListEntryRecord(
                         type,
                         fetchLibrarySummary(record),
-                        new ReleaseSummaryRecord(
-                                new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(RELEASE.RELEASE_NUM),
-                                ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                        ),
+                        fetchReleaseSummary(record),
 
                         manifestId,
                         new Guid(record.getValue("guid", String.class)),
@@ -444,7 +439,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(ACC_MANIFEST).on(ACC.ACC_ID.eq(ACC_MANIFEST.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(ACC_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ACC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ACC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ACC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -638,7 +633,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(ASCC_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ASCC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASCC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASCC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -763,7 +758,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ACC_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(BCC_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(BCC.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BCC.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BCC.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -886,7 +881,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(ACC).on(ACC_MANIFEST.ACC_ID.eq(ACC.ACC_ID))
                     .join(LOG).on(ASCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(ASCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ASCCP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASCCP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(ASCCP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1022,7 +1017,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(BCCP_MANIFEST).on(BCCP.BCCP_ID.eq(BCCP_MANIFEST.BCCP_ID))
                     .join(LOG).on(BCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(BCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(BCCP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(BCCP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(BCCP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1143,7 +1138,7 @@ public class JooqCcQueryRepository extends JooqBaseRepository implements CcQuery
                     .join(DT_MANIFEST).on(DT.DT_ID.eq(DT_MANIFEST.DT_ID))
                     .join(LOG).on(DT_MANIFEST.LOG_ID.eq(LOG.LOG_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(DT.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(DT.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(DT.LAST_UPDATED_BY.eq(updaterTablePk()))

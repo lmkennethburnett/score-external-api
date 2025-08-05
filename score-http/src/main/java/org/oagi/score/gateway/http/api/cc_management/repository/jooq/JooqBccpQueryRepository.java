@@ -108,7 +108,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                     .from(BCCP_MANIFEST)
                     .join(BCCP).on(BCCP_MANIFEST.BCCP_ID.eq(BCCP.BCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(BCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(BCCP.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(BCCP.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(BCCP.LAST_UPDATED_BY))
@@ -124,12 +124,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                 BccpManifestId replacementBccpManifestId = (record.get(BCCP_MANIFEST.REPLACEMENT_BCCP_MANIFEST_ID) != null) ?
                         new BccpManifestId(record.get(BCCP_MANIFEST.REPLACEMENT_BCCP_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(BCCP.STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new BccpDetailsRecord(
@@ -308,7 +303,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                             BCCP.BCCP_ID.eq(BCCP.as("prev").NEXT_BCCP_ID)
                     ))
                     .join(releaseTable()).on(releaseTablePk().eq(BCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(BCCP.as("prev").OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(BCCP.as("prev").CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(BCCP.as("prev").LAST_UPDATED_BY))
@@ -334,12 +329,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                 BccpManifestId replacementBccpManifestId = (record.get(BCCP_MANIFEST.REPLACEMENT_BCCP_MANIFEST_ID) != null) ?
                         new BccpManifestId(record.get(BCCP_MANIFEST.REPLACEMENT_BCCP_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(BCCP.as("prev").STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new BccpDetailsRecord(
@@ -485,7 +475,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                     .from(BCCP_MANIFEST)
                     .join(BCCP).on(BCCP_MANIFEST.BCCP_ID.eq(BCCP.BCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(BCCP_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(BCCP.OWNER_USER_ID))
                     .leftJoin(LOG).on(BCCP_MANIFEST.LOG_ID.eq(LOG.LOG_ID));
         }
@@ -496,12 +486,7 @@ public class JooqBccpQueryRepository extends JooqBaseRepository implements BccpQ
                 DtManifestId dtManifestId = (record.get(BCCP_MANIFEST.BDT_MANIFEST_ID) != null) ?
                         new DtManifestId(record.get(BCCP_MANIFEST.BDT_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 return new BccpSummaryRecord(
                         library, release,
                         bccpManifestId,

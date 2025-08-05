@@ -142,7 +142,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIEP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -429,12 +429,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
 
                 return new BieListEntryRecord(
                         fetchLibrarySummary(record),
-                        new ReleaseSummaryRecord(
-                                new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(RELEASE.RELEASE_NUM),
-                                ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                        ),
+                        fetchReleaseSummary(record),
 
                         topLevelAsbiepId,
                         asbiepId,
@@ -552,7 +547,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(TOP_LEVEL_ASBIEP.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(ASBIEP.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -747,12 +742,7 @@ public class JooqBieQueryRepository extends JooqBaseRepository implements BieQue
 
                 return new BieListEntryRecord(
                         fetchLibrarySummary(record),
-                        new ReleaseSummaryRecord(
-                                new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                                new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                                record.get(RELEASE.RELEASE_NUM),
-                                ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                        ),
+                        fetchReleaseSummary(record),
 
                         topLevelAsbiepId,
                         asbiepId,

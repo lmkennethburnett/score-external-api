@@ -109,7 +109,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                     .from(DT_MANIFEST)
                     .join(DT).on(DT_MANIFEST.DT_ID.eq(DT.DT_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(DT.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(DT.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(DT.LAST_UPDATED_BY))
@@ -126,12 +126,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                 DtManifestId replacementDtManifestId = (record.get(DT_MANIFEST.REPLACEMENT_DT_MANIFEST_ID) != null) ?
                         new DtManifestId(record.get(DT_MANIFEST.REPLACEMENT_DT_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(DT.STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new DtDetailsRecord(
@@ -404,7 +399,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                             DT.DT_ID.eq(DT.as("prev").NEXT_DT_ID)
                     ))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(DT.as("prev").OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(DT.as("prev").CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(DT.as("prev").LAST_UPDATED_BY))
@@ -431,12 +426,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                 DtManifestId replacementDtManifestId = (record.get(DT_MANIFEST.REPLACEMENT_DT_MANIFEST_ID) != null) ?
                         new DtManifestId(record.get(DT_MANIFEST.REPLACEMENT_DT_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(DT.as("prev").STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new DtDetailsRecord(
@@ -593,7 +583,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                     .from(DT_MANIFEST)
                     .join(DT).on(DT_MANIFEST.DT_ID.eq(DT.DT_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(DT.OWNER_USER_ID))
                     .leftJoin(LOG).on(DT_MANIFEST.LOG_ID.eq(LOG.LOG_ID));
         }
@@ -605,12 +595,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                 DtManifestId basedDtManifestId = (record.get(DT_MANIFEST.BASED_DT_MANIFEST_ID) != null) ?
                         new DtManifestId(record.get(DT_MANIFEST.BASED_DT_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 return new DtSummaryRecord(
                         library, release,
                         dtManifestId,
@@ -864,7 +849,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                     .join(DT_MANIFEST).on(DT_SC_MANIFEST.OWNER_DT_MANIFEST_ID.eq(DT_MANIFEST.DT_MANIFEST_ID))
                     .join(DT).on(DT_MANIFEST.DT_ID.eq(DT.DT_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_SC_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(DT_SC.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(DT_SC.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(DT_SC.LAST_UPDATED_BY))
@@ -884,12 +869,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                         (record.get(DT_SC_MANIFEST.REPLACEMENT_DT_SC_MANIFEST_ID) != null) ?
                                 new DtScManifestId(record.get(DT_SC_MANIFEST.REPLACEMENT_DT_SC_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(DT.STATE));
                 Cardinality prevCardinality = null;
                 if (record.get(DT_SC.as("prev").CARDINALITY_MIN.as("prev_cardinality_min")) != null &&
@@ -1167,7 +1147,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                     .join(DT_MANIFEST).on(DT_SC_MANIFEST.OWNER_DT_MANIFEST_ID.eq(DT_MANIFEST.DT_MANIFEST_ID))
                     .join(DT).on(DT_MANIFEST.DT_ID.eq(DT.DT_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(DT_SC_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(DT_SC.OWNER_USER_ID))
                     .leftJoin(LOG).on(DT_MANIFEST.LOG_ID.eq(LOG.LOG_ID));
         }
@@ -1181,12 +1161,7 @@ public class JooqDtQueryRepository extends JooqBaseRepository implements DtQuery
                         (record.get(DT_SC_MANIFEST.BASED_DT_SC_MANIFEST_ID) != null) ?
                                 new DtScManifestId(record.get(DT_SC_MANIFEST.BASED_DT_SC_MANIFEST_ID).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(DT.STATE));
                 return new DtScSummaryRecord(
                         library, release,

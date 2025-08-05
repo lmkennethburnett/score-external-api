@@ -508,7 +508,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                     .from(AGENCY_ID_LIST_MANIFEST)
                     .join(AGENCY_ID_LIST).on(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.AGENCY_ID_LIST_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(AGENCY_ID_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -534,12 +534,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                         (record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")) != null) ?
                                 new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(AGENCY_ID_LIST.STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new AgencyIdListDetailsRecord(
@@ -672,7 +667,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                             AGENCY_ID_LIST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.as("prev").NEXT_AGENCY_ID_LIST_ID)
                     ))
                     .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(AGENCY_ID_LIST.as("prev").OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.as("prev").CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.as("prev").LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -708,12 +703,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                         (record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")) != null) ?
                                 new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.as("based_agency_id_list_manifest").AGENCY_ID_LIST_MANIFEST_ID.as("based_agency_id_list_manifest_id")).toBigInteger()) : null;
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(AGENCY_ID_LIST.as("prev").STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new AgencyIdListDetailsRecord(
@@ -1019,7 +1009,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                     .from(AGENCY_ID_LIST_MANIFEST)
                     .join(AGENCY_ID_LIST).on(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_ID.eq(AGENCY_ID_LIST.AGENCY_ID_LIST_ID))
                     .join(releaseTable()).on(releaseTablePk().eq(AGENCY_ID_LIST_MANIFEST.RELEASE_ID))
-                    .join(libraryTable()).on(libraryTablePk().eq(releaseTablePk()))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(AGENCY_ID_LIST.OWNER_USER_ID.eq(ownerTablePk()))
                     .join(creatorTable()).on(AGENCY_ID_LIST.CREATED_BY.eq(creatorTablePk()))
                     .join(updaterTable()).on(AGENCY_ID_LIST.LAST_UPDATED_BY.eq(updaterTablePk()))
@@ -1158,12 +1148,7 @@ public class JooqAgencyIdListQueryRepository extends JooqBaseRepository implemen
                 AgencyIdListManifestId agencyIdListManifestId =
                         new AgencyIdListManifestId(record.get(AGENCY_ID_LIST_MANIFEST.AGENCY_ID_LIST_MANIFEST_ID).toBigInteger());
                 LibrarySummaryRecord library = fetchLibrarySummary(record);
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 CcState state = CcState.valueOf(record.get(AGENCY_ID_LIST.STATE));
                 UserSummaryRecord owner = fetchOwnerSummary(record);
                 return new AgencyIdListListEntryRecord(
