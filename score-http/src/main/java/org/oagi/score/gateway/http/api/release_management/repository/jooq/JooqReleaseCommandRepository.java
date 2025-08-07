@@ -105,16 +105,23 @@ public class JooqReleaseCommandRepository extends JooqBaseRepository implements 
             ReleaseDetailsRecord release = query.getReleaseDetails(releaseId);
             ReleaseDetailsRecord workingRelease = query.getReleaseDetails(release.libraryId(), "Working");
 
-            dslContext().update(RELEASE)
-                    .set(RELEASE.PREV_RELEASE_ID, valueOf(workingRelease.prev().releaseId()))
-                    .set(RELEASE.NEXT_RELEASE_ID, valueOf(workingRelease.releaseId()))
-                    .where(RELEASE.RELEASE_ID.eq(valueOf(releaseId)))
-                    .execute();
+            if (workingRelease.prev() != null) {
+                dslContext().update(RELEASE)
+                        .set(RELEASE.PREV_RELEASE_ID, valueOf(workingRelease.prev().releaseId()))
+                        .set(RELEASE.NEXT_RELEASE_ID, valueOf(workingRelease.releaseId()))
+                        .where(RELEASE.RELEASE_ID.eq(valueOf(releaseId)))
+                        .execute();
 
-            dslContext().update(RELEASE)
-                    .set(RELEASE.NEXT_RELEASE_ID, valueOf(releaseId))
-                    .where(RELEASE.RELEASE_ID.eq(valueOf(workingRelease.prev().releaseId())))
-                    .execute();
+                dslContext().update(RELEASE)
+                        .set(RELEASE.NEXT_RELEASE_ID, valueOf(releaseId))
+                        .where(RELEASE.RELEASE_ID.eq(valueOf(workingRelease.prev().releaseId())))
+                        .execute();
+            } else {
+                dslContext().update(RELEASE)
+                        .set(RELEASE.NEXT_RELEASE_ID, valueOf(workingRelease.releaseId()))
+                        .where(RELEASE.RELEASE_ID.eq(valueOf(releaseId)))
+                        .execute();
+            }
 
             dslContext().update(RELEASE)
                     .set(RELEASE.PREV_RELEASE_ID, valueOf(releaseId))
