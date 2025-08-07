@@ -38,7 +38,8 @@ export class LibraryService {
       link: library.link,
       domain: library.domain,
       description: library.description,
-      state: library.state
+      state: library.state,
+      isDefault: library.isDefault
     });
   }
 
