@@ -125,7 +125,7 @@ export class ModelBrowserComponent implements OnInit, ChangeListener<ModelBrowse
       this.snackBar.open(errorMessage, '', {
         duration: 3000
       });
-      this.router.navigateByUrl('/core_components');
+      this.router.navigateByUrl('/core_component');
     });
   }
 
