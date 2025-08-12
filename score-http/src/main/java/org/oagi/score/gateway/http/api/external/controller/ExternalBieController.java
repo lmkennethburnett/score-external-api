@@ -7,11 +7,13 @@ import static org.springframework.util.StringUtils.hasLength;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.jooq.exception.IOException;
 import org.oagi.score.gateway.http.api.application_management.service.ApplicationConfigurationService;
@@ -28,14 +30,24 @@ import org.oagi.score.gateway.http.api.bie_management.repository.criteria.BiePac
 import org.oagi.score.gateway.http.api.bie_management.service.BieGenerateService;
 import org.oagi.score.gateway.http.api.bie_management.service.BiePackageQueryService;
 import org.oagi.score.gateway.http.api.bie_management.service.BieQueryService;
+import org.oagi.score.gateway.http.api.cc_management.model.CcType;
+import org.oagi.score.gateway.http.api.cc_management.model.acc.AccManifestId;
 import org.oagi.score.gateway.http.api.cc_management.model.asccp.AsccpManifestId;
+import org.oagi.score.gateway.http.api.cc_management.model.bccp.BccpManifestId;
+import org.oagi.score.gateway.http.api.cc_management.model.dt.DtManifestId;
+import org.oagi.score.gateway.http.api.code_list_management.model.CodeListManifestId;
 import org.oagi.score.gateway.http.api.context_management.business_context.model.BusinessContextId;
 import org.oagi.score.gateway.http.api.external.service.ExternalBieService;
 import org.oagi.score.gateway.http.api.external.service.ExternalComponentsService;
+import org.oagi.score.gateway.http.api.graph.model.FindUsagesRequest;
+import org.oagi.score.gateway.http.api.graph.model.FindUsagesResponse;
+import org.oagi.score.gateway.http.api.graph.model.Graph;
+import org.oagi.score.gateway.http.api.graph.service.GraphService;
 import org.oagi.score.gateway.http.api.release_management.model.ReleaseId;
 import org.oagi.score.gateway.http.api.tenant_management.service.TenantQueryService;
 import org.oagi.score.gateway.http.common.model.AccessPrivilege;
 import org.oagi.score.gateway.http.common.model.DateRangeCriteria;
+import org.oagi.score.gateway.http.common.model.Guid;
 import org.oagi.score.gateway.http.common.model.PageRequest;
 import org.oagi.score.gateway.http.common.model.PageResponse;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
@@ -83,6 +95,9 @@ public class ExternalBieController {
 
         @Autowired
         private ExternalBieService externalBieService;
+
+        @Autowired
+        private GraphService graphService;
 
         @RequestMapping(value = "/ext/bie_list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public PageResponse<BieListEntryRecord> getBieList(
@@ -134,6 +149,10 @@ public class ExternalBieController {
                 Collection<ReleaseId> releaseIdList = separate(releaseVersions)
                                 .map(e -> externalComponentsService.getReleaseId(libraryName, e)).collect(toSet());
 
+                if (!org.springframework.util.StringUtils.hasLength(states)) {
+                        states=String.join(",",BieState.QA.toString(),BieState.Production.toString());
+                }
+
                 BieListFilterCriteria filterCriteria = new BieListFilterCriteria(
                                 externalComponentsService.getLibraryId(libraryName),
                                 releaseIdList,
@@ -141,7 +160,9 @@ public class ExternalBieController {
                                 separate(businessContext).collect(toSet()),
                                 version, remark, asccpManifestId,
                                 (hasLength(access)) ? AccessPrivilege.valueOf(access) : null,
-                                separate(states).map(e -> BieState.valueOf(e)).collect(toSet()),
+                                separate(states).map(e -> BieState.valueOf(e))
+                                        .filter(state -> state.getLevel() >=  BieState.QA.getLevel())
+                                        .collect(toSet()),
                                 separate(excludePropertyTerms).collect(toSet()),
 
                                 separate(topLevelAsbiepIds).map(e -> TopLevelAsbiepId.from(e)).collect(toSet()),
@@ -235,8 +256,10 @@ public class ExternalBieController {
         @RequestMapping(value = "/ext/bie/generate", method = RequestMethod.GET)
         public ResponseEntity<InputStreamResource> generate(
                         @RequestParam(name = "bizCtxIds", required = false) String bizCtxIds,
-                        @RequestParam(name = "topLevelAsbiepId", required = true) TopLevelAsbiepId topLevelAsbiepId)
+                        @RequestParam(name = "guid", required = true) Guid guid)
                         throws IOException, FileNotFoundException {
+
+                TopLevelAsbiepId topLevelAsbiepId = externalBieService.getTopLevelAsbiepId(guid);
 
                 Map<TopLevelAsbiepId, BusinessContextId> bizCtxMap = new HashMap<>();
                 if (null != bizCtxIds) {
@@ -317,8 +340,104 @@ public class ExternalBieController {
                 }
                 response.setPage(pageRequest.pageIndex());
                 response.setSize(pageRequest.pageSize());
-                
+
                 return response;
         }
+
+        @RequestMapping(value = "/ext/find_usages/{type}/{id:[\\d]+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        public FindUsagesResponse findUsages(@AuthenticationPrincipal AuthenticatedPrincipal user,
+                        @PathVariable("type") String type,
+                        @PathVariable("id") BigInteger manifestId) {
+                CcType ccType = CcType.valueOf(type.toUpperCase());
+                ScoreUser scoreUser = sessionService.getScoreSystemUser();
+
+                switch (ccType) {
+                        case ACC:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new AccManifestId(manifestId)));
+                        case ASCCP:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new AsccpManifestId(manifestId)));
+                        case BCCP:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new BccpManifestId(manifestId)));
+                        case DT:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new DtManifestId(manifestId)));
+                }
+
+                throw new IllegalArgumentException("Unknown graph type " + type);
+        }
+
+    @RequestMapping(value = "/ext/graphs/{type}/{id:[\\d]+}",
+            method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> getGraph(@AuthenticationPrincipal AuthenticatedPrincipal user,
+                                        @PathVariable("type") String type,
+                                        @PathVariable("id") BigInteger id,
+                                        @RequestParam(value = "q", required = false) String query) {
+
+        
+        
+        ScoreUser scoreUser = sessionService.getScoreSystemUser();                                        
+        Graph graph;
+        switch (type.toLowerCase()) {
+            case "acc":
+            case "extension":
+                graph = graphService.getAccGraph(
+                        scoreUser, new AccManifestId(id));
+                break;
+
+            case "asccp":
+                graph = graphService.getAsccpGraph(
+                        scoreUser, new AsccpManifestId(id), false);
+                break;
+
+            case "bccp":
+                graph = graphService.getBccpGraph(
+                        scoreUser, new BccpManifestId(id));
+                break;
+
+            case "dt":
+                graph = graphService.getDtGraph(
+                        scoreUser, new DtManifestId(id));
+                break;
+
+            case "top_level_asbiep":
+                graph = graphService.getBieGraph(
+                        scoreUser, new TopLevelAsbiepId(id));
+                break;
+
+            case "code_list":
+                graph = graphService.getCodeListGraph(
+                        scoreUser, new CodeListManifestId(id));
+                break;
+
+            default:
+                throw new UnsupportedOperationException();
+        }
+
+        Map<String, Object> response = new HashMap();
+
+        if (StringUtils.hasLength(query)) {
+            Collection<List<String>> paths = graph.findPaths(type + id, query);
+            response.put("query", query);
+            response.put("paths", paths.stream()
+                    .map(e -> e.stream()
+                            .filter(item -> !item.matches("ascc\\d+|bcc\\d+|bdt\\d+"))
+                            .collect(Collectors.joining(">"))
+                    )
+                    .collect(Collectors.toList()));
+        } else {
+            response.put("graph", graph);
+        }
+
+        return response;
+    }
+
 
 }
