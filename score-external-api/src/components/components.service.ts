@@ -45,10 +45,7 @@ export class ComponentsService {
         return libraries;
     }
 
-    async getReleases(libraryName?: string): Promise<Releases> {
-
-        if (!libraryName)
-            libraryName = this.configService.get("default_library");
+    async getReleases(libraryName: string): Promise<Releases> {
 
         const userId = this.configService.get("user_id");
 
@@ -113,12 +110,9 @@ export class ComponentsService {
     }
 
 
-    async getStandaloneComponent(uuid: string, schemaType = 'xsd', libraryName?: string, releaseVersion?: string) {
+    async getStandaloneComponent(libraryName: string, uuid: string, schemaType = 'xsd', releaseVersion?: string) {
 
-        if (!libraryName)
-            libraryName = this.configService.get("default_library") ?? "connectSpec";
-
-        const schemaUrlXsd = this.axiosHelper.getBackendUrl("gateway_external_api.components_xsd_backend_endpoint");
+        const schemaUrlXsd = this.axiosHelper.getBackendUrl("gateway_external_api.components_schema_backend_endpoint");
 
         if (schemaType != 'xsd') { //&& schemaType!='json') { //TODO:  JSON
             throw new HttpException("Unsupported schema type", HttpStatus.BAD_REQUEST);
@@ -127,9 +121,9 @@ export class ComponentsService {
         const releaseNum = releaseVersion ?? (await this.getLatestRelease(libraryName)).releaseNum;
         console.log(releaseNum);
 
-        var cachedSchema = this.cacheHelper.getFromCache(libraryName, uuid, schemaType, releaseNum);
+        var cachedSchema = await this.cacheHelper.getFromCache(libraryName, uuid, schemaType, releaseNum);
         if (cachedSchema) {
-            console.log("returning cached schema");
+            console.log("returning cached schema" + cachedSchema);
             return cachedSchema;
         }
         else {
@@ -171,10 +165,32 @@ export class ComponentsService {
         }
     }
 
-    async getAllComponentsMetadata(withChildren: boolean, libraryName?: string, tags?: string, releaseVersion?: string, componentTypes?: string, componentDen?: string): Promise<Components> {
+    async getAsccpComponents(libraryName: string, releaseVersion: string): Promise<Components> {
 
-        if (!libraryName)
-            libraryName = this.configService.get("default_library") ?? "connectSpec";
+        const asccpRoute = '/components?library=' + libraryName + '&releaseVersion=' + releaseVersion + '&types=asccp';
+        const componentsCache = await this.cacheHelper.getFromInMemoryCache(asccpRoute);
+        if (componentsCache) {
+            try {
+                return JSON.parse(componentsCache);
+            }
+            catch (error) {
+                console.error("could not parse in memory components " + error);
+                throw error;
+            }
+        }
+        else {
+            const components = await this.getAllComponentsMetadata(libraryName, false, undefined, releaseVersion, undefined, undefined);
+            if (components) {
+                await this.cacheHelper.addToInMemoryCache(asccpRoute, JSON.stringify(components));
+                return components;
+            }
+            else {
+                return new Components();
+            }
+        }
+    }
+
+    async getAllComponentsMetadata(libraryName: string, withChildren: boolean, tags?: string, releaseVersion?: string, componentTypes?: string, componentDen?: string): Promise<Components> {
 
         const userId = this.configService.get("user_id");
 
@@ -206,6 +222,12 @@ export class ComponentsService {
                 this.httpService.get(metadataUrl, axiosConfig)
                     .pipe(map(async response => {
                         var componentsList = response.data.list;
+
+                        componentsList.forEach(component => {
+                            component.owner = component.owner.loginId;
+                            component.definition = component.definition.content;
+                        });
+
                         if (withChildren) {
                             const componentChildren =
                                 await firstValueFrom(
@@ -223,11 +245,6 @@ export class ComponentsService {
                                 )
                                 ;
 
-                            componentsList.forEach(component => {
-                                component.owner = component.owner.loginId;
-                                component.definition = component.definition.content;
-                            });
-
                             const groupedChildren: Record<string, string[]> = {};
                             for (const rel of componentChildren) {
                                 if (!groupedChildren[rel.parentGuid]) {
@@ -243,9 +260,9 @@ export class ComponentsService {
                             componentsList = updatedComponentsList;
                         }
 
-                        const components = plainToInstance(Components, { "components": componentsList },
+                        const componentsDto = plainToInstance(Components, { "components": componentsList },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
-                        return components;
+                        return componentsDto;
                     }))
 
                     .pipe(
@@ -265,6 +282,10 @@ export class ComponentsService {
         )
         return components;
 
+    }
+
+    getDefaultLibrary() {
+        return this.configService.get<string>('default_library')??'connectSpec';
     }
 
 }
