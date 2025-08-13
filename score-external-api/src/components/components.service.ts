@@ -222,10 +222,15 @@ export class ComponentsService {
                 this.httpService.get(metadataUrl, axiosConfig)
                     .pipe(map(async response => {
                         var componentsList = response.data.list;
-
                         componentsList.forEach(component => {
                             component.owner = component.owner.loginId;
                             component.definition = component.definition.content;
+                            component.tagList.forEach(tag => {
+                                if (tag.name === 'Noun' || tag.name == 'BOD' || tag.name == 'Verb') {
+                                    component.nounBodVerbTag = component.tagList[0].name;
+                                }
+                            })
+
                         });
 
                         if (withChildren) {
@@ -259,7 +264,8 @@ export class ComponentsService {
                             }));
                             componentsList = updatedComponentsList;
                         }
-
+                        //const fullCopyComponentsList = JSON.parse(JSON.stringify(componentsList));
+                        //console.log(fullCopyComponentsList)
                         const componentsDto = plainToInstance(Components, { "components": componentsList },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
                         return componentsDto;
@@ -285,8 +291,7 @@ export class ComponentsService {
     }
 
     getDefaultLibrary() {
-        return this.configService.get<string>('default_library')??'connectSpec';
+        return this.configService.get<string>('default_library') ?? 'connectSpec';
     }
 
 }
-

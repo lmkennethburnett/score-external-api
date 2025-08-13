@@ -1,18 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
-import { ChildComponent } from './child_components.dto';
-import { ValidateNested } from 'class-validator';
 
 @Exclude()
-export class Component {
+export class Bie {
 
     @ApiProperty()
     @Expose()
     public type: string;
 
     @ApiProperty()
-    @Exclude()
+    @Expose()
     public manifestId: bigint;
+
+    @ApiProperty()
+    @Expose()
+    public topLevelAsbiepId: bigint;
 
     @ApiProperty()
     @Expose({ name: 'guid' })
@@ -59,8 +61,8 @@ export class Component {
     public lastUpdateTimestamp: bigint;
 
     @ApiProperty()
-    @Expose()
-    public releaseNum: string;
+    @Expose({ name: 'branch' })
+    public branchCreatedWith: string;
 
     @ApiProperty()
     @Expose()
@@ -68,7 +70,7 @@ export class Component {
 
     @ApiProperty()
     @Expose()
-    public nounBodVerbTag: string;
+    public tagList: string[];
 
     @ApiProperty()
     @Expose()
@@ -78,32 +80,64 @@ export class Component {
     @Expose()
     public updatedReleaseNum: string;
 
+    @ApiProperty()
+    @Expose()
+    public componentTag: string;
+
+    @ApiProperty()
+    @Expose()
+    public componentDefinition: string;
+
+    @ApiProperty()
+    @Expose()
+    public componentState: string;
+
+    @ApiProperty()
+    @Expose()
+    public componentUuid: string;
+
+    @ApiProperty()
+    @Expose()
+    public fromNewComponent: boolean;
+
+    @ApiProperty()
+    @Expose()
+    public componentSinceReleaseNum: string;
+
+    @ApiProperty()
+    @Expose()
+    public componentLastChangedReleaseNum: string;
+
+    @ApiProperty()
+    @Expose()
+    public basedTopLevelAsbiepId: bigint;
+
 }
 
 @Exclude()
-export class Components {
+export class BIEs {
     @Expose()
-    @ApiProperty({ type: [Component] })
-    @Type(() => Component)
-    public components: Component[];
+    @ApiProperty()
+    @Type(() => Bie)
+    public bies: Bie[];
 }
 
 @Exclude()
-export class ComponentWithChildren extends Component {
+export class BieWithChildren {
 
-  
-    @ApiProperty({ type: [ChildComponent] })
+    @ApiProperty()
     @Expose()
-    @ValidateNested({ each: true })
-    @Type(() => ChildComponent) // Important: Tells class-transformer how to transform nested object
-    public children: ChildComponent[];
+    public bie: Bie;
 
+    @ApiProperty()
+    @Expose()
+    public childBies: Bie[];
 }
 
 @Exclude()
-export class ComponentsWithChildren {
+export class BiesWithChildren {
     @Expose()
-    @ApiProperty({ type: [ComponentWithChildren] })
-    @Type(() => ComponentWithChildren)
-    public components: ComponentWithChildren[];
+    @ApiProperty()
+    @Type(() => BieWithChildren)
+    public bies: BieWithChildren[];
 }

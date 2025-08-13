@@ -7,7 +7,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery, ApiOkResponse, ApiProdu
 import { Components, ComponentsWithChildren } from './components.dto';
 import { Release, Releases } from './releases.dto';
 import { Libraries } from './libraries.dto';
-import { ConfigService } from '@nestjs/config';
 
 
 @ApiTags('connectSpec (OAGIS) Components')
@@ -16,8 +15,7 @@ import { ConfigService } from '@nestjs/config';
 export class ComponentsController {
 
   constructor(
-    private readonly componentsService: ComponentsService,
-    private readonly configService: ConfigService
+    private readonly componentsService: ComponentsService
   ) { }
 
 

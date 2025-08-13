@@ -3,281 +3,303 @@ import { ConfigService } from '@nestjs/config';
 import { map } from 'rxjs/operators';
 import { catchError, firstValueFrom, Observable } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosError } from 'axios';
 import { ComponentsService } from 'src/components/components.service';
+import { AxiosHelper } from '../common/gateway_api_helper';
+import { Bie, BIEs, BiesWithChildren, BieWithChildren } from './bie.dto';
+import { plainToInstance } from 'class-transformer';
+import { CacheHelper } from 'src/common/cache_helper';
+import { BiePackages, BiePackageWithBies, BiePackageWithBiesWithChildren } from './bie_package.dto';
+
 
 @Injectable()
 export class BieService {
-    cachePath = "cache";
-    backendServer = this.configService.get<string>('backend_server');
-    metadataUrl = this.backendServer + this.configService.get<string>('bie_backend_endpoint');
-    schemaUrlXsd = this.backendServer + this.configService.get<string>('bie_xsd_backend_endpoint');
-    localServer = this.configService.get<string>('local_server') + ':' + this.configService.get<string>('api_port');
-    fs = require('fs');
-    path = require('path');
 
     constructor(
-        private readonly httpService: HttpService, private configService: ConfigService, private componentService: ComponentsService
+        private readonly httpService: HttpService, private readonly configService: ConfigService,
+        private readonly componentService: ComponentsService, private readonly axiosHelper: AxiosHelper, private readonly cacheHelper: CacheHelper
     ) { }
 
 
-    getFromCache(uuid: string, schemaType: string): string {
-        var schema;
-        try {
-            const cacheFile = this.path.join(this.cachePath, schemaType, uuid + '.' + schemaType);
-            schema = this.fs.readFileSync(cacheFile).toString();
-            if (schema) {
-                console.log("cache hit " + cacheFile);
+
+    private async mergeComponentInfo(bieMetadata: BIEs, libraryName: string): Promise<BIEs> {
+
+        let bies = bieMetadata.bies;
+        for (var i = 0; i < bies.length; i++) {
+
+            const components = (await this.componentService.getAsccpComponents(libraryName, bies[i].branchCreatedWith)).components;
+            for (var j = 0; j < components.length; j++) {
+                if (bies[i].den == components[j].den) {
+                    bies[i].componentTag = components[j].nounBodVerbTag;
+                    bies[i].componentDefinition = components[j].definition;
+                    bies[i].componentState = components[j].state;
+                    bies[i].componentUuid = components[j].uuid;
+                    bies[i].componentState = components[j].state;
+                    bies[i].fromNewComponent = components[j].newComponent;
+                    bies[i].componentSinceReleaseNum = components[j].sinceReleaseNum;
+                    bies[i].componentLastChangedReleaseNum = components[j].updatedReleaseNum;
+                    break;
+                }
             }
         }
-        catch (error) {
-            console.log("cache miss: " + error);
-            return schema;
-        }
-        return schema;
+        return bieMetadata;
     }
 
-    writeToCache(uuid: string, schema: string, schemaType: string) {
-        const cachePath = this.path.join(this.cachePath, schemaType);
-        const cacheFile = this.path.join(cachePath, uuid + '.' + schemaType);
-        if (!this.fs.existsSync(cachePath)) {
-            this.fs.mkdirSync(cachePath, { recursive: true });
-        }
-        this.fs.writeFileSync(cacheFile, schema, (err) => {
-            if (err) {
-                console.log("Schema cache failed " + cacheFile);
-                console.log(err);
-            }
-            else {
-                console.log("Schema written to cache " + cacheFile);
-            }
-        }
-        );
-    }
 
-    async mergeComponentTags(bieMetadata): Promise<JSON> {
-        const componentsUrl = this.localServer + '/api/components';
+    async getBieSchema(uuid: string, schemaType = 'xsd') {
 
-        const merged = await firstValueFrom(
-            this.httpService.get(componentsUrl,
+        const schemaUrlXsd = this.axiosHelper.getBackendUrl("gateway_external_api.bie_generate_backend_endpoint");
+
+        if (schemaType != 'xsd') { //&& schemaType!='json') { //TODO:  JSON
+            throw new HttpException("Unsupported schema type", HttpStatus.BAD_REQUEST);
+        }
+
+        const standalone = await
+            this.httpService.get(schemaUrlXsd,
                 {
                     params:
-                        { types: 'asccp' }
+                        { guid: uuid }
                 }
             )
                 .pipe(map(response => {
-                    let components = response.data;
-
-                    for (var i = 0; i < bieMetadata.length; i++) {
-                        console.log(bieMetadata[i].den);
-                        for (var j = 0; j < components.length; j++) {
-                            if (bieMetadata[i].den == components[j].den) {
-                                bieMetadata[i].componentTags = components[j].tagList;
-                                break;
-                            }
-                        }
-
-                    }
-                    console.log(bieMetadata);
-                    return bieMetadata;
+                    return response.data;
                 }))
-
                 .pipe(
                     catchError((error: AxiosError) => {
-                        console.log(error);
-                        throw new HttpException('Error getting top level id', error.response.status);
+                        this.axiosHelper.handleAxiosError(error);
                     }),
                 )
-        );
-
-        return merged;
-
-    }
+            ;
 
 
-    async getTopLevelId(uuid: string): Promise<bigint> {
-        const bieUrl = this.localServer + '/api/bie';
-
-        const topLevelAsbiepId = await firstValueFrom(
-            this.httpService.get(bieUrl)
-
-                .pipe(map(response => {
-                    let bie = response.data;
-                    for (var i = 0; i < bie.length; i++) {
-                        if (bie[i].guid == uuid) {
-                            console.log('mapped ' + uuid + ' ' + bie[i].topLevelAsbiepId);
-                            return bie[i].topLevelAsbiepId;
-                        }
-                    }
-                }))
-
-                .pipe(
-                    catchError((error: AxiosError) => {
-                        console.log(error);
-                        throw new HttpException('Error getting top level id', error.response.status);
-                    }),
-                )
-
-        );
-        return topLevelAsbiepId;
-    }
-
-
-    getBieSchema(uuid: string, schemaType = 'xsd') {
-
-        var cachedSchema = this.getFromCache(uuid, schemaType);
-        var cached = false;
-        if (cachedSchema) {
-            cached = true;
-        }
-        console.log("cached " + cached)
-
-        const standalone = this.getTopLevelId(uuid)
-            .then(resp => {
-                var topLevelAsbiepId = resp;
-                console.log("toplevelasbiepid" + topLevelAsbiepId);
-                if (topLevelAsbiepId) {
-
-                    const standaloneUrl = this.schemaUrlXsd;
-
-                    const data =
-                        this.httpService
-                            .get
-                            (standaloneUrl,
-                                {
-                                    params:
-                                        { topLevelAsbiepId: topLevelAsbiepId }
-                                }
-                            )
-                            .pipe(map(response => {
-                                let standalone = response.data;
-                                console.log(standalone);
-                                const fs = require('fs');
-                                console.log(topLevelAsbiepId);
-                                this.writeToCache(uuid, standalone.toString(), schemaType);
-                                return standalone;
-                            }))
-                            .pipe(
-                                catchError((error) => {
-                                    if (error.response) {
-                                        // The request was made and the server responded with a status code
-                                        // that falls out of the range of 2xx
-                                        console.log(error.response.data);
-                                        console.log(error.response.status);
-                                        console.log(error.response.headers);
-                                        throw new HttpException(error.message, error.response.status);
-                                    } else if (error.request) {
-                                        // The request was made but no response was received
-                                        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                                        // http.ClientRequest in node.js
-                                        console.log(error.request);
-                                    } else {
-                                        // Something happened in setting up the request that triggered an Error
-                                        console.log('Error', error.message);
-                                    }
-                                    console.log(error.config);
-                                    throw new HttpException('Could not retrieve data from Score', HttpStatus.SERVICE_UNAVAILABLE);
-                                }),
-
-                            )
-
-                        ;
-
-                    return data;
-                }
-            });
 
         return standalone;
     }
 
+    async getAllBieMetadataWithChildren(libraryName: string, releaseVersions?: string, businessContexts?: string, den?: string, states?: string): Promise<BiesWithChildren> {
+        const allBies = await this.getAllBieMetadata(libraryName, releaseVersions, businessContexts, den, states);
+        return this.addBieChildren(allBies);
+    }
 
-    async getAllBieMetadata(releaseVersion?: string, businessContexts?: string, den?: string, states?: string): Promise<JSON> {
+    private async addBieChildren(bies: BIEs): Promise<BiesWithChildren> {
+        let biesWithChildren: BiesWithChildren = JSON.parse(JSON.stringify(bies));
+        let bieChildren: BieWithChildren[] = [];
+        biesWithChildren.bies = bieChildren;
+        console.log(JSON.stringify(bies));
+        if (bies.bies.length > 0) {
+            for (const parentBie of bies.bies) {
+                let childBies: Bie[] = [];
+                for (const childBie of bies.bies) {
+                    if (parentBie.topLevelAsbiepId === childBie.basedTopLevelAsbiepId) {
+                        childBies.push(childBie);
+                    }
+                }
+                const bieWithChildren = JSON.parse(JSON.stringify(parentBie));
+                bieWithChildren.childBies = childBies;
 
-        var pageSize = this.configService.get('bie_metadata_page_size');
-
-        var releaseId;
-
-        if (releaseVersion) {
-            releaseId = await this.componentService.getReleaseId(releaseVersion);
+            }
+            biesWithChildren = plainToInstance(BiesWithChildren, { bies: bieChildren },
+                { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
         }
-        else {
-            releaseId =
-                await firstValueFrom(
-                    this.httpService.get(this.localServer + '/api/components/latest_release')
-                        .pipe(map(response => {
-                            return response.data;
-                        })));
 
-        }
-        console.log("using releaseid" + releaseId);
+        return biesWithChildren;
+    }
+
+
+    async getAllBieMetadata(libraryName: string, releaseVersions?: string, businessContexts?: string, den?: string, states?: string): Promise<BIEs> {
+
+        const metadataUrl = this.axiosHelper.getBackendUrl("gateway_external_api.bie_backend_endpoint")
 
         console.log("retrieving bie metadata");
 
         let axiosConfig = {
             params:
             {
-                pageSize: pageSize,
-                pageIndex: 0,
-                sortActive: 'den',
-                sortDirection: 'asc',
+                libraryName: libraryName,
+                pageSize: -1,
+                pageIndex: -1,
                 businessContext: businessContexts,
                 den: den,
                 states: states,
-                releaseIds: releaseId
+                releaseVersions: releaseVersions
             }
             ,
-            validateStatus: function (status) {
+            validateStatus: function (status: number) {
                 return status == 200; // Resolve only if the status code is 200
             }
         };
 
-        const data =
+        const bies =
             await firstValueFrom(
                 this.httpService.get
-                    (this.metadataUrl, axiosConfig)
+                    (metadataUrl, axiosConfig)
                     .pipe(map(response => {
-                        let bieList = response.data.list;
-                        if (bieList) {
-                            for (var i = 0; i < bieList.length; i++) {
-                                bieList[i].branch = bieList[i].releaseNum;
-                                delete bieList[i].releaseNum;
+                        var bieList = response.data.list;
+                        bieList.forEach(bie => {
+                            const based = bie.based;
+                            if (based) {
+                                bie.basedTopLevelAsbiepId = based.topLevelAsbiepId;
                             }
+                            bie.owner = bie.owner.loginId;
+                            bie.branch = bie.release.releaseNum;
+                        });
+                        const biesDto = plainToInstance(BIEs, { bies: bieList },
+                            { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
+                        console.log(JSON.stringify(biesDto));
+                        const mergedBies = this.mergeComponentInfo(biesDto, libraryName);
+                        return mergedBies;
 
-                            return this.mergeComponentTags(bieList);
-                        }
                     }
                     ))
                     .pipe(
-                        catchError((error) => {
-                            if (error.response) {
-                                // The request was made and the server responded with a status code
-                                // that falls out of the range of 2xx
-                                console.log(error.response.data);
-                                console.log(error.response.status);
-                                console.log(error.response.headers);
-                                if (error.response.status == 404) {
-                                    throw new HttpException("Internal Endpoint Not Found", HttpStatus.SERVICE_UNAVAILABLE);
-                                }
-                                else
-                                    throw new HttpException(error.message, error.response.status);
-                            } else if (error.request) {
-                                // The request was made but no response was received
-                                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                                // http.ClientRequest in node.js
-                                console.log(error.request);
-                            } else {
-                                // Something happened in setting up the request that triggered an Error
-                                console.log('Error', error.message);
-                            }
-                            console.log(error.config);
-                            throw new HttpException('Could not retrieve data from Score', HttpStatus.SERVICE_UNAVAILABLE);
+                        catchError((error: AxiosError) => {
+                            this.axiosHelper.handleAxiosError(error);
                         }),
                     )
             )
             ;
 
-        return data;
+
+        return bies;
     }
 
-}
 
+    async getBiePackageMetadataWithBiesWithChildren(libraryName: string, packageName: string, packageVersionId: string, packageState?: string,): Promise<BiePackageWithBiesWithChildren> {
+        const packageWithBies = await this.getBiePackageMetadataWithBies(libraryName, packageName, packageVersionId, packageState);
+        const bies = packageWithBies.bies;
+        console.log(JSON.stringify(bies));
+        if (bies) {
+            const packageBiesWithChildren = await this.addBieChildren(bies)
+        }
+        let biePackageWithBieChildren = JSON.parse(JSON.stringify(bies));
+
+        biePackageWithBieChildren.bies = biePackageWithBieChildren;
+        const packageWithBiesWithChildren = plainToInstance(BiePackageWithBiesWithChildren,
+            { packageName: packageName, packageVersionId: packageVersionId, bies: biePackageWithBieChildren },
+            { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true })
+        return packageWithBiesWithChildren;
+    }
+
+
+    async getBiePackageMetadataWithBies(libraryName: string, packageName: string, packageVersionId: string, packageState?: string): Promise<BiePackageWithBies> {
+
+        const packageBiesUrl = this.axiosHelper.getBackendUrl('gateway_external_api.bie_packages_bies_backend_endpoint');
+
+        const biePackages = await this.getBiePackagesMetadata(libraryName, packageState, packageName, packageVersionId);
+        const biePackage = biePackages.biePackages[0];
+
+        let axiosConfig = {
+            params:
+            {
+                libraryName: libraryName,
+                versionName: packageName,
+                versionId: packageVersionId,
+                pageSize: -1,
+                pageIndex: -1,
+            }
+            ,
+            validateStatus: function (status: number) {
+                return status == 200; // Resolve only if the status code is 200
+            }
+        }
+
+        const biePackageBies =
+            await firstValueFrom(this.httpService.get
+                (packageBiesUrl, axiosConfig)
+                .pipe(map(response => {
+                    const bieList = response.data.list;
+
+                    const packageWithBies = plainToInstance(BiePackageWithBies,
+                        { packageName: packageName, packageVersionId: packageVersionId, bies: bieList }
+                        , { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
+
+                    return packageWithBies;
+                }
+                ))
+                .pipe(
+                    catchError((error: AxiosError) => {
+                        this.axiosHelper.handleAxiosError(error);
+                    }),
+                )
+            );
+
+        return biePackageBies;
+    }
+
+
+    async getBiePackagesMetadata(libraryName: string, packageState?: string, packageName?: string, packageVersionId?: string): Promise<BiePackages> {
+
+        const packageUrl = this.axiosHelper.getBackendUrl('gateway_external_api.bie_packages_backend_endpoint');
+
+        console.log("retrieving bie package metadata");
+
+        let axiosConfig = {
+            params:
+            {
+                libraryName: libraryName,
+                pageSize: -1,
+                pageIndex: -1,
+                state: packageState,
+                versionId: packageVersionId,
+                versionName: packageName
+            }
+            ,
+            validateStatus: function (status: number) {
+                return status == 200; // Resolve only if the status code is 200
+            }
+        };
+
+        const biePackages =
+            await firstValueFrom(
+                this.httpService.get
+                    (packageUrl, axiosConfig)
+                    .pipe(map(response => {
+                        const packages = plainToInstance(BiePackages,
+                            { packageName: packageName, packageVersionId: packageVersionId, biePackages: response.data.list },
+                            { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
+                        return packages;
+                    }
+                    ))
+                    .pipe(
+                        catchError((error: AxiosError) => {
+                            this.axiosHelper.handleAxiosError(error);
+                        }),
+                    )
+            );
+
+        return biePackages;
+    }
+
+
+    /*
+        async getBaseBieRelationships(Bie bie) { //libraryName: string, biePackageName?: string, biePackageVersionId?: string): Promise<BieBaseRelations> {
+    
+            const bies = (await this.getAllBieMetadata(libraryName)).bies;
+    
+            const biePackages = (await this.getBiePackageMetadata(libraryName, state, biePackageName, biePackageVersionId)).biePackages;
+            bies = biePackages.find(pkg => pkg.biePackageId === biePackageId)?.BIEs ?? [];
+    
+    
+            let bieBaseRelationsList: BieBaseRelation[] = [];
+            for (const baseBie of bies) {
+                for (const childBie of bies) {
+                    if (baseBie.topLevelAsbiepId === childBie.basedTopLevelAsbiepId) {
+                        let bieBaseRelation = new BieBaseRelation();
+                        bieBaseRelation.baseUuid = baseBie.uuid;
+                        bieBaseRelation.baseDen = baseBie.den;
+                        bieBaseRelation.baseState = baseBie.state;
+                        bieBaseRelation.childUuid = childBie.uuid;
+                        bieBaseRelation.childDen = childBie.den;
+                        bieBaseRelation.childState = childBie.state;
+                        bieBaseRelationsList.push(bieBaseRelation);
+                    }
+    
+                }
+            }
+            const bieBaseRelations = new BieBaseRelations();
+            bieBaseRelations.bieBases = bieBaseRelationsList;
+            return bieBaseRelations;
+        }
+            */
+
+}

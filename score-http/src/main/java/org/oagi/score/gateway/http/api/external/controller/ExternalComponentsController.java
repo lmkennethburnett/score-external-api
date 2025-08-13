@@ -193,9 +193,7 @@ public class ExternalComponentsController {
 
                 ReleaseId releaseId = service.getReleaseId(libraryName, releaseVersion);
 
-                ScoreUser requester = sessionService.getScoreSystemUser(); // new ScoreUser(new UserId(userId), "", "",
-                                                                           // "", false,
-                // List.of(ScoreRole.ANONYMOUS));
+                ScoreUser requester = sessionService.getScoreSystemUser(); 
 
                 CcListFilterCriteria filterCriteria = CcListFilterCriteria.builder(releaseId)
                                 .den(den)
@@ -241,13 +239,11 @@ public class ExternalComponentsController {
                                 pageRequest);
 
                 PageResponse<CcListEntryRecord> response = new PageResponse<>();
-                // response.setList(resultAndCount.result());
+                response.setList(resultAndCount.result());
                 response.setPage(pageRequest.pageIndex());
                 response.setSize(pageRequest.pageSize());
                 response.setLength(resultAndCount.count());
 
-                List<CcListEntryRecord> resultList = resultAndCount.result();
-                response.setList(resultList);
                 return response;
 
         }
