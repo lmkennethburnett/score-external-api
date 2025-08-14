@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
-import { Components } from './components.dto';
+import { Components, ComponentsWithChildren } from './components.dto';
 import { Releases, Release } from './releases.dto';
 import { plainToInstance } from 'class-transformer';
 import { AxiosHelper } from '../common/gateway_api_helper';
@@ -234,12 +234,12 @@ export class ComponentsService {
                         });
 
                         if (withChildren) {
-                            const componentChildren =
+                            const componentParentChildren =
                                 await firstValueFrom(
                                     this.httpService.get(childrenUrl, axiosConfig)
                                         .pipe(map(response => {
-                                            const childComponents = response.data.list;
-                                            return childComponents;
+                                            const parentChildComponents = response.data.list;
+                                            return parentChildComponents;
                                         }))
 
                                         .pipe(
@@ -251,7 +251,7 @@ export class ComponentsService {
                                 ;
 
                             const groupedChildren: Record<string, string[]> = {};
-                            for (const rel of componentChildren) {
+                            for (const rel of componentParentChildren) {
                                 if (!groupedChildren[rel.parentGuid]) {
                                     groupedChildren[rel.parentGuid] = [];
                                 }
@@ -260,13 +260,13 @@ export class ComponentsService {
 
                             const updatedComponentsList = componentsList.map((parent) => ({
                                 ...parent,
-                                children: componentChildren.filter((rel) => rel.parentGuid === parent.guid),
+                                children: componentParentChildren.filter((rel) => rel.parentGuid === parent.guid),
                             }));
                             componentsList = updatedComponentsList;
+                            
                         }
-                        //const fullCopyComponentsList = JSON.parse(JSON.stringify(componentsList));
-                        //console.log(fullCopyComponentsList)
-                        const componentsDto = plainToInstance(Components, { "components": componentsList },
+
+                        const componentsDto = plainToInstance(withChildren?ComponentsWithChildren:Components, { "components": componentsList },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
                         return componentsDto;
                     }))
