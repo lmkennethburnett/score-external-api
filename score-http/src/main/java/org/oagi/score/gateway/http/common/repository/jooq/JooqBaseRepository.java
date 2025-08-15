@@ -10,11 +10,20 @@ import org.oagi.score.gateway.http.api.account_management.model.UserSummaryRecor
 import org.oagi.score.gateway.http.api.cc_management.model.ascc.AsccSummaryRecord;
 import org.oagi.score.gateway.http.api.cc_management.model.bcc.BccSummaryRecord;
 import org.oagi.score.gateway.http.api.cc_management.service.SeqKeyHandler;
+import org.oagi.score.gateway.http.api.library_management.model.LibraryId;
+import org.oagi.score.gateway.http.api.library_management.model.LibrarySummaryRecord;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseId;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseState;
+import org.oagi.score.gateway.http.api.release_management.model.ReleaseSummaryRecord;
 import org.oagi.score.gateway.http.common.model.Id;
 import org.oagi.score.gateway.http.common.model.ScoreRole;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
 import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.AppUser;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.Library;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.Release;
 import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.AppUserRecord;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.LibraryRecord;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.ReleaseRecord;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,7 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.APP_USER;
+import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.*;
 
 public abstract class JooqBaseRepository {
 
@@ -68,16 +77,10 @@ public abstract class JooqBaseRepository {
         return Arrays.stream(fields);
     }
 
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2) {
-        return Stream.of(stream1, stream2).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3) {
-        return Stream.of(stream1, stream2, stream3).flatMap(Function.identity()).toArray(Field[]::new);
-    }
-
-    public final Field<?>[] concat(Stream<? extends Field<?>> stream1, Stream<? extends Field<?>> stream2, Stream<? extends Field<?>> stream3, Stream<? extends Field<?>> stream4) {
-        return Stream.of(stream1, stream2, stream3, stream4).flatMap(Function.identity()).toArray(Field[]::new);
+    public final Field<?>[] concat(Stream<? extends Field<?>>... streams) {
+        return Stream.of(streams)
+                .flatMap(Function.identity())
+                .toArray(Field[]::new);
     }
 
     public final Date toDate(LocalDateTime localDateTime) {
@@ -212,6 +215,59 @@ public abstract class JooqBaseRepository {
                 repositoryFactory().seqKeyCommandRepository(requester()));
         seqKeyHandler.init(bcc.fromAccManifestId(), bcc.seqKeyId(), bcc.bccManifestId());
         return seqKeyHandler;
+    }
+
+    public Library libraryTable() {
+        return LIBRARY;
+    }
+
+    public TableField<LibraryRecord, ULong> libraryTablePk() {
+        return libraryTable().LIBRARY_ID;
+    }
+
+    public final Stream<? extends Field<?>> libraryFields() {
+        return Arrays.asList(
+                libraryTablePk(),
+                libraryTable().NAME.as("library_name"),
+                libraryTable().STATE.as("library_state"),
+                libraryTable().IS_READ_ONLY,
+                libraryTable().IS_DEFAULT
+        ).stream();
+    }
+
+    public LibrarySummaryRecord fetchLibrarySummary(Record record) {
+        return new LibrarySummaryRecord(
+                new LibraryId(record.get(libraryTablePk()).toBigInteger()),
+                record.get(libraryTable().NAME.as("library_name")),
+                record.get(libraryTable().STATE.as("library_state")),
+                (byte) 1 == record.get(libraryTable().IS_READ_ONLY),
+                (byte) 1 == record.get(libraryTable().IS_DEFAULT)
+        );
+    }
+
+    public Release releaseTable() {
+        return RELEASE;
+    }
+
+    public TableField<ReleaseRecord, ULong> releaseTablePk() {
+        return releaseTable().RELEASE_ID;
+    }
+
+    public final Stream<? extends Field<?>> releaseFields() {
+        return Arrays.asList(
+                releaseTablePk(),
+                releaseTable().RELEASE_NUM,
+                releaseTable().STATE.as("release_state")
+        ).stream();
+    }
+
+    public ReleaseSummaryRecord fetchReleaseSummary(Record record) {
+        return new ReleaseSummaryRecord(
+                new ReleaseId(record.get(releaseTablePk()).toBigInteger()),
+                new LibraryId(record.get(libraryTablePk()).toBigInteger()),
+                record.get(releaseTable().RELEASE_NUM),
+                ReleaseState.valueOf(record.get(releaseTable().STATE.as("release_state")))
+        );
     }
 
 }

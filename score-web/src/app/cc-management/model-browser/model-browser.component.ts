@@ -27,6 +27,8 @@ import {MatMenuTrigger} from '@angular/material/menu';
 import {loadBooleanProperty, saveBooleanProperty} from '../../common/utility';
 import {ChangeListener} from '../../bie-management/domain/bie-flat-tree';
 import {CcNodeService} from '../domain/core-component-node.service';
+import {CcFlatNode} from '../domain/cc-flat-tree';
+import {FindUsagesDialogComponent} from '../find-usages-dialog/find-usages-dialog.component';
 
 
 @Component({
@@ -123,7 +125,7 @@ export class ModelBrowserComponent implements OnInit, ChangeListener<ModelBrowse
       this.snackBar.open(errorMessage, '', {
         duration: 3000
       });
-      this.router.navigateByUrl('/core_components');
+      this.router.navigateByUrl('/core_component');
     });
   }
 
@@ -262,6 +264,41 @@ export class ModelBrowserComponent implements OnInit, ChangeListener<ModelBrowse
     }
   }
 
+  findUsages(node: ModelBrowserNode) {
+    if (!node) {
+      return;
+    }
+
+    let data;
+    if (this.isAccDetail(node)) { // if the node is a root
+      data = {
+        type: 'ASCCP',
+        manifestId: this.asAccDetail(node).asccp.manifestId
+      };
+    } else if (this.isAsccpDetail(node)) {
+      data = {
+        type: node.ccType,
+        manifestId: this.asAsccpDetail(node).asccp.manifestId
+      };
+    } else if (this.isBccpDetail(node)) {
+      data = {
+        type: node.ccType,
+        manifestId: this.asBccpDetail(node).bccp.manifestId
+      };
+    } else {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(FindUsagesDialogComponent, {
+      data,
+      width: '600px',
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe(_ => {
+    });
+  }
+
   copyLink(node: ModelBrowserNode, $event?) {
     if ($event) {
       $event.preventDefault();
@@ -341,6 +378,13 @@ export class ModelBrowserComponent implements OnInit, ChangeListener<ModelBrowse
       node = this.selectedNode;
     }
     return node.detail as ModelBrowserDtScNodeDetail;
+  }
+
+  visibleFindUsages(node?: ModelBrowserNode): boolean {
+    if (!node) {
+      return false;
+    }
+    return node.ccType.toUpperCase() === 'ACC' || node.ccType.toUpperCase() === 'ASCCP' || node.ccType.toUpperCase() === 'BCCP';
   }
 
 }

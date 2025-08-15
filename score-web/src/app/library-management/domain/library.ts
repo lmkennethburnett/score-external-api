@@ -8,6 +8,7 @@ export class LibrarySummary {
   name: string;
   state: string;
   readOnly: boolean;
+  isDefault: boolean;
 }
 
 export class LibraryDetails {
@@ -20,6 +21,7 @@ export class LibraryDetails {
   description: string;
   state: string;
   readOnly: boolean;
+  isDefault: boolean;
 
   created: WhoAndWhen;
   lastUpdated: WhoAndWhen;
@@ -35,6 +37,7 @@ export class LibraryListEntry {
   description: string;
   state: string;
   readOnly: boolean;
+  isDefault: boolean;
 
   created: WhoAndWhen;
   lastUpdated: WhoAndWhen;

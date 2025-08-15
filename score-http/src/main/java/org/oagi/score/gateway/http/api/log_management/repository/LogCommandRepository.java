@@ -9,6 +9,7 @@ import org.oagi.score.gateway.http.api.cc_management.model.dt.DtDetailsRecord;
 import org.oagi.score.gateway.http.api.code_list_management.model.CodeListDetailsRecord;
 import org.oagi.score.gateway.http.api.log_management.model.LogAction;
 import org.oagi.score.gateway.http.api.log_management.model.LogId;
+import org.oagi.score.gateway.http.api.xbt_management.model.XbtDetailsRecord;
 import org.oagi.score.gateway.http.common.model.Guid;
 
 public interface LogCommandRepository {
@@ -24,6 +25,8 @@ public interface LogCommandRepository {
     LogId create(CodeListDetailsRecord codeListDetails, LogAction logAction);
 
     LogId create(AgencyIdListDetailsRecord agencyIdListDetails, LogAction logAction);
+
+    LogId create(XbtDetailsRecord xbtDetails, LogAction logAction);
 
     void deleteByReference(Guid guid);
 

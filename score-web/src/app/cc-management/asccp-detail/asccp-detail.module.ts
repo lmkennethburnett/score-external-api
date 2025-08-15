@@ -11,11 +11,18 @@ import {ScoreCommonModule} from '../../common/score-common.module';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {AngularSplitModule} from 'angular-split';
 import {SearchOptionsDialogModule} from '../search-options-dialog/search-options-dialog.module';
+import {CcPlantumlDiagramModule} from '../cc-plantuml-diagram/cc-plantuml-diagram.module';
+import {CcPlantumlDiagramComponent} from '../cc-plantuml-diagram/cc-plantuml-diagram.component';
 
 const routes: Routes = [
   {
     path: 'core_component/asccp/:manifestId',
     children: [
+      {
+        path: 'plantuml',
+        component: CcPlantumlDiagramComponent,
+        canActivate: [AuthService],
+      },
       {
         path: '**',
         component: AsccpDetailComponent,
@@ -37,7 +44,8 @@ const routes: Routes = [
     ScoreCommonModule,
     SearchOptionsDialogModule,
     DragDropModule,
-    AngularSplitModule
+    AngularSplitModule,
+    CcPlantumlDiagramModule
   ],
   declarations: [
     AsccpDetailComponent

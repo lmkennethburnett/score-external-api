@@ -282,7 +282,7 @@ export class AssignBusinessTermBieComponent implements OnInit {
         this.request.library = this.libraries.filter(e => e.libraryId === savedLibraryId)[0];
       }
       if (!this.request.library || !this.request.library.libraryId) {
-        this.request.library = this.libraries[0];
+        this.request.library = this.libraries.find(e => e.isDefault) || this.libraries[0];
       }
       if (this.request.library) {
         saveLibrary(this.auth.getUserToken(), this.request.library.libraryId);

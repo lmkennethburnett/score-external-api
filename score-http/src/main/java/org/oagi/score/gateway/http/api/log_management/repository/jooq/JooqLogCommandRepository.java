@@ -18,6 +18,7 @@ import org.oagi.score.gateway.http.api.log_management.model.LogSummaryRecord;
 import org.oagi.score.gateway.http.api.log_management.model.LogUtils;
 import org.oagi.score.gateway.http.api.log_management.repository.LogCommandRepository;
 import org.oagi.score.gateway.http.api.log_management.service.LogSerializer;
+import org.oagi.score.gateway.http.api.xbt_management.model.XbtDetailsRecord;
 import org.oagi.score.gateway.http.common.model.Guid;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
 import org.oagi.score.gateway.http.common.model.SortDirection;
@@ -93,6 +94,13 @@ public class JooqLogCommandRepository extends JooqBaseRepository implements LogC
         return create(agencyIdListDetails.log(), logAction, LogUtils.generateHash(),
                 serializer.serialize(requester(), agencyIdListDetails),
                 agencyIdListDetails.guid());
+    }
+
+    public LogId create(XbtDetailsRecord xbtDetails, LogAction logAction) {
+
+        return create(xbtDetails.log(), logAction, LogUtils.generateHash(),
+                serializer.serialize(requester(), xbtDetails),
+                xbtDetails.guid());
     }
 
     private LogId create(LogSummaryRecord prevLog, LogAction logAction, String logHash,

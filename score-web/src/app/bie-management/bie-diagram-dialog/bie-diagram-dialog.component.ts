@@ -3,7 +3,7 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {ActivatedRoute, Router} from '@angular/router';
 import {BieListService} from '../bie-list/domain/bie-list.service';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {PlantUmlService} from '../../cc-management/plantuml-diagram/domain/plantuml.service';
+import {PlantUmlService} from '../../common/plantuml-diagram/plantuml.service';
 
 @Component({
   selector: 'score-bie-diagram-dialog',

@@ -44,19 +44,15 @@ public class JooqBlobContentQueryRepository extends JooqBaseRepository implement
     private class GetBlobContentSummaryQueryBuilder {
 
         SelectJoinStep<? extends Record> select() {
-            return dslContext().select(
+            return dslContext().select(concat(fields(
                             BLOB_CONTENT_MANIFEST.BLOB_CONTENT_MANIFEST_ID,
                             BLOB_CONTENT.BLOB_CONTENT_ID,
                             BLOB_CONTENT.CONTENT,
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
                             RELEASE.RELEASE_ID,
                             RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"))
+                            RELEASE.STATE.as("release_state")
+                    ), libraryFields()))
                     .from(BLOB_CONTENT_MANIFEST)
                     .join(BLOB_CONTENT).on(BLOB_CONTENT_MANIFEST.BLOB_CONTENT_ID.eq(BLOB_CONTENT.BLOB_CONTENT_ID))
                     .join(RELEASE).on(BLOB_CONTENT_MANIFEST.RELEASE_ID.eq(RELEASE.RELEASE_ID))
@@ -69,18 +65,8 @@ public class JooqBlobContentQueryRepository extends JooqBaseRepository implement
                         new BlobContentManifestId(record.get(BLOB_CONTENT_MANIFEST.BLOB_CONTENT_MANIFEST_ID).toBigInteger());
                 BlobContentId blobContentId =
                         new BlobContentId(record.get(BLOB_CONTENT.BLOB_CONTENT_ID).toBigInteger());
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 return new BlobContentSummaryRecord(
                         library, release,
 

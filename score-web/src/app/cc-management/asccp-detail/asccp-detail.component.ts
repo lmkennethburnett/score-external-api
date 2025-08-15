@@ -43,6 +43,7 @@ import {EditTagsDialogComponent} from '../../tag-management/edit-tags-dialog/edi
 import {FormControl} from '@angular/forms';
 import {PreferencesInfo} from '../../settings-management/settings-preferences/domain/preferences';
 import {SettingsPreferencesService} from '../../settings-management/settings-preferences/domain/settings-preferences.service';
+import {ModelBrowserNode} from '../model-browser/domain/model-browser-node';
 
 @Component({
   selector: 'score-asccp-detail',
@@ -927,6 +928,18 @@ export class AsccpDetailComponent implements OnInit {
         this.tags = tags;
       });
     });
+  }
+
+  openDiagram(node: CcFlatNode) {
+    if (!node) {
+      return;
+    }
+
+    if (this.isAsccpDetail(node)) {
+      window.open('/core_component/asccp/' + this.asAsccpDetail(node).asccp.manifestId + '/plantuml', '_blank');
+    } else {
+      return;
+    }
   }
 
   visibleFindUsages(node: CcFlatNode): boolean {

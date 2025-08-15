@@ -176,7 +176,7 @@ export class SettingsPreferencesService {
     return new Observable(subscriber => {
       saveProperty(userToken, key, JSON.stringify(columns));
 
-      subscriber.next();
+      subscriber.next(undefined);
       subscriber.complete();
     });
   }
@@ -383,7 +383,7 @@ export class SettingsPreferencesService {
       saveProperty(userToken, this.TREE_SETTINGS_PATH_DELIMITER_PROPERTY_KEY,
         preferencesInfo.viewSettingsInfo.treeSettings.delimiter);
 
-      subscriber.next();
+      subscriber.next(undefined);
       subscriber.complete();
     });
   }

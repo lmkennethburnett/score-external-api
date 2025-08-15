@@ -50,6 +50,7 @@ public class BiePackageQueryController {
     public PageResponse<BiePackageListEntryRecord> getBiePackageList(
             @AuthenticationPrincipal AuthenticatedPrincipal user,
             @RequestParam(name = "libraryId") LibraryId libraryId,
+            @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "versionId", required = false) String versionId,
             @RequestParam(name = "versionName", required = false) String versionName,
             @RequestParam(name = "description", required = false) String description,
@@ -98,7 +99,7 @@ public class BiePackageQueryController {
             Integer pageSize) {
 
         BiePackageListFilterCriteria filterCriteria = new BiePackageListFilterCriteria(
-                libraryId, versionId, versionName, description, den, businessTerm, version, remark,
+                libraryId, name, versionId, versionName, description, den, businessTerm, version, remark,
                 separate(states).map(e -> BieState.valueOf(e)).collect(toSet()),
                 separate(releaseIds).map(e -> ReleaseId.from(e)).collect(toSet()),
                 separate(biePackageIds).map(e -> BiePackageId.from(e)).collect(toSet()),

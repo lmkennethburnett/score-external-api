@@ -73,7 +73,7 @@ public class JooqModuleSetReleaseQueryRepository extends JooqBaseRepository impl
     private class GetModuleSetReleaseSummaryListQueryBuilder {
 
         SelectOnConditionStep<? extends Record> select() {
-            return dslContext().select(MODULE_SET_RELEASE.MODULE_SET_RELEASE_ID,
+            return dslContext().select(concat(fields(MODULE_SET_RELEASE.MODULE_SET_RELEASE_ID,
                             MODULE_SET_RELEASE.NAME.as("module_set_release_name"),
                             MODULE_SET_RELEASE.DESCRIPTION,
                             MODULE_SET_RELEASE.IS_DEFAULT,
@@ -83,14 +83,10 @@ public class JooqModuleSetReleaseQueryRepository extends JooqBaseRepository impl
                             MODULE_SET.NAME.as("module_set_name"),
                             MODULE_SET.DESCRIPTION.as("module_set_description"),
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
                             RELEASE.RELEASE_ID,
                             RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state"))
+                            RELEASE.STATE.as("release_state")
+                    ), libraryFields()))
                     .from(MODULE_SET_RELEASE)
                     .join(RELEASE).on(RELEASE.RELEASE_ID.eq(MODULE_SET_RELEASE.RELEASE_ID))
                     .join(MODULE_SET).on(MODULE_SET.MODULE_SET_ID.eq(MODULE_SET_RELEASE.MODULE_SET_ID))
@@ -102,18 +98,8 @@ public class JooqModuleSetReleaseQueryRepository extends JooqBaseRepository impl
 
         RecordMapper<Record, ModuleSetReleaseSummaryRecord> mapper() {
             return record -> {
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 ModuleSetSummaryRecord moduleSet = new ModuleSetSummaryRecord(
                         new ModuleSetId(record.get(MODULE_SET.MODULE_SET_ID).toBigInteger()),
                         library.libraryId(),
@@ -155,18 +141,13 @@ public class JooqModuleSetReleaseQueryRepository extends JooqBaseRepository impl
                             MODULE_SET.NAME.as("module_set_name"),
                             MODULE_SET.DESCRIPTION.as("module_set_description"),
 
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
                             RELEASE.RELEASE_ID,
                             RELEASE.RELEASE_NUM,
                             RELEASE.STATE.as("release_state"),
 
                             MODULE_SET_RELEASE.CREATION_TIMESTAMP,
                             MODULE_SET_RELEASE.LAST_UPDATE_TIMESTAMP
-                    ), creatorFields(), updaterFields()))
+                    ), libraryFields(), creatorFields(), updaterFields()))
                     .from(MODULE_SET_RELEASE)
                     .join(RELEASE).on(RELEASE.RELEASE_ID.eq(MODULE_SET_RELEASE.RELEASE_ID))
                     .join(MODULE_SET).on(MODULE_SET.MODULE_SET_ID.eq(MODULE_SET_RELEASE.MODULE_SET_ID))
@@ -180,18 +161,8 @@ public class JooqModuleSetReleaseQueryRepository extends JooqBaseRepository impl
 
         RecordMapper<Record, ModuleSetReleaseDetailsRecord> mapper() {
             return record -> {
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
                 ModuleSetSummaryRecord moduleSet = new ModuleSetSummaryRecord(
                         new ModuleSetId(record.get(MODULE_SET.MODULE_SET_ID).toBigInteger()),
                         library.libraryId(),

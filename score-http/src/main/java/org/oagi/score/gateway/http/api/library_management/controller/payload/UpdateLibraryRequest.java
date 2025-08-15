@@ -9,11 +9,13 @@ public record UpdateLibraryRequest(
         String organization,
         String link,
         String domain,
-        String description) {
+        String description,
+        String state,
+        Boolean isDefault) {
 
     // Copy constructor to create a new instance with a libraryId
     public UpdateLibraryRequest withLibraryId(LibraryId libraryId) {
-        return new UpdateLibraryRequest(libraryId, type, name, organization, link, domain, description);
+        return new UpdateLibraryRequest(libraryId, type, name, organization, link, domain, description, state, isDefault);
     }
 
 }

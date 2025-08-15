@@ -5,8 +5,8 @@ import org.oagi.score.gateway.http.common.model.WhoAndWhen;
 public record LibraryListEntry(LibraryId libraryId,
                                String type, String name,
                                String organization, String description,
-                               String link, String domain,
-                               String state, boolean readOnly,
+                               String link, String domain, String state,
+                               boolean readOnly, boolean isDefault,
                                WhoAndWhen created,
                                WhoAndWhen lastUpdated) {
 }

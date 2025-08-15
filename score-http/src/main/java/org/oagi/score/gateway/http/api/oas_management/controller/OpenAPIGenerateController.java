@@ -74,6 +74,9 @@ public class OpenAPIGenerateController {
         openAPIGenerateExpressionOption.setOasDoc(oasDoc);
         openAPIGenerateExpressionOption.setScheme(getRequestScheme(httpServletRequest));
         openAPIGenerateExpressionOption.setHost(getRequestHostname(httpServletRequest));
+        // Issue #1670
+        // Enable 'BIE Definition' option by default
+        openAPIGenerateExpressionOption.setBieDefinition(true);
 
         for (BieForOasDoc bieForOasDoc : bieListForOasDoc) {
             OpenAPITemplateForVerbOption openAPITemplate = new OpenAPITemplateForVerbOption(Operation.valueOf(bieForOasDoc.getVerb()));

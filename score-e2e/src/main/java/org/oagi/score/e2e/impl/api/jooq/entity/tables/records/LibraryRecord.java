@@ -161,11 +161,29 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
     }
 
     /**
+     * Setter for <code>oagi.library.is_default</code>. Indicates if the library
+     * is the default (0 = False, 1 = True). The default library is shown first
+     * if the user has no preference.
+     */
+    public void setIsDefault(Byte value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>oagi.library.is_default</code>. Indicates if the library
+     * is the default (0 = False, 1 = True). The default library is shown first
+     * if the user has no preference.
+     */
+    public Byte getIsDefault() {
+        return (Byte) get(9);
+    }
+
+    /**
      * Setter for <code>oagi.library.created_by</code>. Foreign key to the
      * APP_USER table referring to the user who creates the record.
      */
     public void setCreatedBy(ULong value) {
-        set(9, value);
+        set(10, value);
     }
 
     /**
@@ -173,7 +191,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * APP_USER table referring to the user who creates the record.
      */
     public ULong getCreatedBy() {
-        return (ULong) get(9);
+        return (ULong) get(10);
     }
 
     /**
@@ -181,7 +199,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * APP_USER table referring to the last user who updated the record.
      */
     public void setLastUpdatedBy(ULong value) {
-        set(10, value);
+        set(11, value);
     }
 
     /**
@@ -189,7 +207,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * APP_USER table referring to the last user who updated the record.
      */
     public ULong getLastUpdatedBy() {
-        return (ULong) get(10);
+        return (ULong) get(11);
     }
 
     /**
@@ -197,7 +215,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * the record was created.
      */
     public void setCreationTimestamp(LocalDateTime value) {
-        set(11, value);
+        set(12, value);
     }
 
     /**
@@ -205,7 +223,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * the record was created.
      */
     public LocalDateTime getCreationTimestamp() {
-        return (LocalDateTime) get(11);
+        return (LocalDateTime) get(12);
     }
 
     /**
@@ -213,7 +231,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * when the record was last updated.
      */
     public void setLastUpdateTimestamp(LocalDateTime value) {
-        set(12, value);
+        set(13, value);
     }
 
     /**
@@ -221,7 +239,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
      * when the record was last updated.
      */
     public LocalDateTime getLastUpdateTimestamp() {
-        return (LocalDateTime) get(12);
+        return (LocalDateTime) get(13);
     }
 
     // -------------------------------------------------------------------------
@@ -247,7 +265,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
     /**
      * Create a detached, initialised LibraryRecord
      */
-    public LibraryRecord(ULong libraryId, String name, String type, String organization, String description, String link, String domain, String state, Byte isReadOnly, ULong createdBy, ULong lastUpdatedBy, LocalDateTime creationTimestamp, LocalDateTime lastUpdateTimestamp) {
+    public LibraryRecord(ULong libraryId, String name, String type, String organization, String description, String link, String domain, String state, Byte isReadOnly, Byte isDefault, ULong createdBy, ULong lastUpdatedBy, LocalDateTime creationTimestamp, LocalDateTime lastUpdateTimestamp) {
         super(Library.LIBRARY);
 
         setLibraryId(libraryId);
@@ -259,6 +277,7 @@ public class LibraryRecord extends UpdatableRecordImpl<LibraryRecord> {
         setDomain(domain);
         setState(state);
         setIsReadOnly(isReadOnly);
+        setIsDefault(isDefault);
         setCreatedBy(createdBy);
         setLastUpdatedBy(lastUpdatedBy);
         setCreationTimestamp(creationTimestamp);

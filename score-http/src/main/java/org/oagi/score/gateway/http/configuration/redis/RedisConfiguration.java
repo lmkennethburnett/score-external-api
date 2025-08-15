@@ -6,9 +6,10 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.config.TransportMode;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisSentinelConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.util.PlaceholderResolutionException;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -30,32 +32,48 @@ import java.util.stream.Collectors;
 @EnableTransactionManagement
 public class RedisConfiguration {
 
-    @Value("${spring.data.redis.host}")
-    private String redisHost;
+    @Autowired
+    private Environment environment;
 
-    @Value("${spring.data.redis.port}")
-    private int redisPort;
+    private String getProperty(String key, String defaultValue) {
+        try {
+            return environment.getProperty(key, defaultValue);
+        } catch (PlaceholderResolutionException e) {
+            return defaultValue;
+        }
+    }
 
-    @Value("${spring.data.redis.sentinel.master}")
-    private String redisSentinelMaster;
+    public final String redisHost() {
+        return getProperty("spring.data.redis.host", "localhost");
+    }
 
-    @Value("${spring.data.redis.sentinel.nodes}")
-    private String redisSentinelNodes;
+    public final String redisPort() {
+        return getProperty("spring.data.redis.port", "6379");
+    }
 
-    @Value("${spring.data.redis.cluster.nodes}")
-    private String redisClusterNodes;
+    public final String redisSentinelMaster() {
+        return getProperty("spring.data.redis.sentinel.master", "");
+    }
+
+    public final String redisSentinelNodes() {
+        return getProperty("spring.data.redis.sentinel.nodes", "");
+    }
+
+    public final String redisClusterNodes() {
+        return getProperty("spring.data.redis.cluster.nodes", "");
+    }
 
     private Set<String> getRedisSentinelNodes() {
-        if (StringUtils.hasLength(redisSentinelNodes)) {
-            return Arrays.asList(redisSentinelNodes.split(",")).stream()
+        if (StringUtils.hasLength(redisSentinelNodes())) {
+            return Arrays.asList(redisSentinelNodes().split(",")).stream()
                     .map(e -> e.trim()).filter(e -> StringUtils.hasLength(e)).collect(Collectors.toSet());
         }
         return Collections.emptySet();
     }
 
     private List<String> getRedisClusterNodes() {
-        if (StringUtils.hasLength(redisClusterNodes)) {
-            return Arrays.asList(redisClusterNodes.split(",")).stream()
+        if (StringUtils.hasLength(redisClusterNodes())) {
+            return Arrays.asList(redisClusterNodes().split(",")).stream()
                     .map(e -> e.trim()).filter(e -> StringUtils.hasLength(e)).collect(Collectors.toList());
         }
         return Collections.emptyList();
@@ -67,11 +85,11 @@ public class RedisConfiguration {
         List<String> redisClusterNodes = getRedisClusterNodes();
         if (!redisClusterNodes.isEmpty()) {
             redisConfiguration = new RedisClusterConfiguration(redisClusterNodes);
-        } else if (StringUtils.hasLength(redisSentinelMaster)) {
+        } else if (StringUtils.hasLength(redisSentinelMaster())) {
             Set<String> redisSentinelNodes = getRedisSentinelNodes();
-            redisConfiguration = new RedisSentinelConfiguration(redisSentinelMaster, redisSentinelNodes);
+            redisConfiguration = new RedisSentinelConfiguration(redisSentinelMaster(), redisSentinelNodes);
         } else {
-            redisConfiguration = new RedisStandaloneConfiguration(redisHost, redisPort);
+            redisConfiguration = new RedisStandaloneConfiguration(redisHost(), Integer.parseInt(redisPort()));
         }
         LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(redisConfiguration);
         return connectionFactory;
@@ -90,10 +108,10 @@ public class RedisConfiguration {
                         }
                         return "redis://" + e;
                     }).collect(Collectors.toList()));
-        } else if (StringUtils.hasLength(redisSentinelMaster)) {
+        } else if (StringUtils.hasLength(redisSentinelMaster())) {
             Set<String> redisSentinelNodes = getRedisSentinelNodes();
             config.useSentinelServers()
-                    .setMasterName(redisSentinelMaster)
+                    .setMasterName(redisSentinelMaster())
                     .setSentinelAddresses(redisSentinelNodes.stream().map(e -> {
                         if (e.startsWith("redis://") || e.startsWith("rediss://")) {
                             return e;
@@ -102,7 +120,7 @@ public class RedisConfiguration {
                     }).collect(Collectors.toList()));
         } else {
             config.useSingleServer()
-                    .setAddress("redis://" + redisHost + ":" + redisPort);
+                    .setAddress("redis://" + redisHost() + ":" + redisPort());
         }
         return Redisson.create(config);
     }
