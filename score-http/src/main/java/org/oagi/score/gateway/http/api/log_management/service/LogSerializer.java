@@ -23,9 +23,13 @@ import org.oagi.score.gateway.http.api.cc_management.model.dt.DtDetailsRecord;
 import org.oagi.score.gateway.http.api.cc_management.model.dt_sc.DtScDetailsRecord;
 import org.oagi.score.gateway.http.api.code_list_management.model.CodeListDetailsRecord;
 import org.oagi.score.gateway.http.api.code_list_management.model.CodeListValueDetailsRecord;
+import org.oagi.score.gateway.http.api.xbt_management.model.XbtDetailsRecord;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
 import org.oagi.score.gateway.http.common.repository.jooq.RepositoryFactory;
-import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.*;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.AgencyIdListValueManifestRecord;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.AgencyIdListValueRecord;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.CodeListValueManifestRecord;
+import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.CodeListValueRecord;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -583,33 +587,39 @@ public class LogSerializer {
     }
 
     @SneakyThrows(JsonIOException.class)
-    public String serialize(XbtManifestRecord xbtManifestRecord, XbtRecord xbtRecord) {
+    public String serialize(ScoreUser requester, XbtDetailsRecord xbtDetails) {
         Map<String, Object> properties = new HashMap();
 
         properties.put("component", "xbt");
-        properties.put("guid", xbtRecord.getGuid());
-        properties.put("name", xbtRecord.getName());
-        properties.put("builtInType", xbtRecord.getBuiltinType());
-        properties.put("revisionDoc", xbtRecord.getRevisionDoc());
-        properties.put("schemaDefinition", xbtRecord.getSchemaDefinition());
-        properties.put("jbtDraft05Map", xbtRecord.getJbtDraft05Map());
-        properties.put("openapi30Map", xbtRecord.getOpenapi30Map());
-        properties.put("state", xbtRecord.getState());
-        properties.put("deprecated", (byte) 1 == xbtRecord.getIsDeprecated());
+        properties.put("guid", xbtDetails.guid().value());
+        properties.put("name", xbtDetails.name());
+        properties.put("builtInType", xbtDetails.builtInType());
+        properties.put("revisionDoc", xbtDetails.revisionDoc());
+        properties.put("schemaDefinition", xbtDetails.schemaDefinition());
+        properties.put("jbtDraft05Map", xbtDetails.jbtDraft05Map());
+        properties.put("openapi30Map", xbtDetails.openApi30Map());
+        properties.put("state", xbtDetails.state());
+        properties.put("deprecated", xbtDetails.deprecated());
 
-        properties.put("subTypeOfXbt", resolver.getXbt(xbtRecord.getSubtypeOfXbtId()));
-//        properties.put("ownerUser", resolver.getUser(xbtRecord.getOwnerUserId()));
+        properties.put("subTypeOfXbt", resolver.getXbt(xbtDetails.subTypeOfXbt()));
+//        properties.put("ownerUser", resolver.getUser(xbtDetails.getOwnerUserId()));
 
-        properties.put("_metadata", toMetadata(xbtManifestRecord, xbtRecord));
+        properties.put("_metadata", toMetadata(xbtDetails));
 
         return gson.toJson(properties, HashMap.class);
     }
 
-    private Map<String, Object> toMetadata(XbtManifestRecord xbtManifestRecord, XbtRecord xbtRecord) {
+    private Map<String, Object> toMetadata(XbtDetailsRecord xbtDetails) {
         Map<String, Object> metadata = new HashMap();
 
-        metadata.put("xbtManifest", toMetadata(xbtManifestRecord));
-        metadata.put("xbt", toMetadata(xbtRecord));
+        metadata.put("xbtManifest", toMetadata(
+                dslContext.selectFrom(XBT_MANIFEST)
+                        .where(XBT_MANIFEST.XBT_MANIFEST_ID.eq(ULong.valueOf(xbtDetails.xbtManifestId().value())))
+                        .fetchOne()));
+        metadata.put("xbt", toMetadata(
+                dslContext.selectFrom(XBT)
+                        .where(XBT.XBT_ID.eq(ULong.valueOf(xbtDetails.xbtId().value())))
+                        .fetchOne()));
 
         return metadata;
     }
