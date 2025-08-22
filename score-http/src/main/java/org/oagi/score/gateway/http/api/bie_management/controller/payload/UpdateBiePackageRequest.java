@@ -5,13 +5,14 @@ import org.oagi.score.gateway.http.api.bie_management.model.BieState;
 
 public record UpdateBiePackageRequest(
         BiePackageId biePackageId,
+        String name,
         String versionId,
         String versionName,
         String description,
         BieState state) {
 
     public UpdateBiePackageRequest withBiePackageId(BiePackageId biePackageId) {
-        return new UpdateBiePackageRequest(biePackageId, versionId, versionName, description, state);
+        return new UpdateBiePackageRequest(biePackageId, name, versionId, versionName, description, state);
     }
 
 }

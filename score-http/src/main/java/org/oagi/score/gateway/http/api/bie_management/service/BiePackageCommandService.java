@@ -1,5 +1,7 @@
 package org.oagi.score.gateway.http.api.bie_management.service;
 
+import org.apache.commons.text.CharacterPredicates;
+import org.apache.commons.text.RandomStringGenerator;
 import org.oagi.score.gateway.http.api.DataAccessForbiddenException;
 import org.oagi.score.gateway.http.api.account_management.model.UserId;
 import org.oagi.score.gateway.http.api.bie_management.controller.payload.CreateBiePackageRequest;
@@ -13,6 +15,7 @@ import org.oagi.score.gateway.http.common.model.ScoreUser;
 import org.oagi.score.gateway.http.common.repository.jooq.RepositoryFactory;
 import org.oagi.score.gateway.http.configuration.security.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,8 +47,13 @@ public class BiePackageCommandService {
 
         return command(requester).create(
                 request.libraryId(),
+                hasLength(request.name()) ? request.name() : "New BIE Package",
                 hasLength(request.versionId()) ? request.versionId() : "v1.0",
-                hasLength(request.versionName()) ? request.versionName() : "New BIE Package",
+                hasLength(request.versionName()) ? request.versionName() : RandomStringGenerator.builder()
+                        .withinRange('0', 'z')
+                        .filteredBy(CharacterPredicates.LETTERS, CharacterPredicates.DIGITS)
+                        .build()
+                        .generate(8),
                 request.description());
     }
 
@@ -60,11 +68,16 @@ public class BiePackageCommandService {
         } else {
             ensureBiePackageIsUpdatable(requester, request.biePackageId(), true);
 
-            return command(requester).update(
-                    request.biePackageId(),
-                    request.versionId(),
-                    request.versionName(),
-                    request.description());
+            try {
+                return command(requester).update(
+                        request.biePackageId(),
+                        request.name(),
+                        request.versionId(),
+                        request.versionName(),
+                        request.description());
+            } catch (DuplicateKeyException e) {
+                throw new IllegalArgumentException("A BIE package with the same name, version ID, and version name already exists.", e);
+            }
         }
     }
 

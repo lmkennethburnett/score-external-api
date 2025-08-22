@@ -9,7 +9,7 @@ public interface LibraryCommandRepository {
 
     boolean update(LibraryId libraryId,
                    String type, String name, String organization, String description,
-                   String link, String domain, String state);
+                   String link, String domain, String state, Boolean isDefault);
 
     boolean delete(LibraryId libraryId);
 

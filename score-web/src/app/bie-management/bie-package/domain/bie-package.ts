@@ -9,6 +9,7 @@ import {LibrarySummary} from '../../../library-management/domain/library';
 export class BiePackageListEntry {
   biePackageId: number;
   libraryId: number;
+  name: string;
   versionId: string;
   versionName: string;
   description: string;
@@ -23,6 +24,7 @@ export class BiePackageListEntry {
 export class BiePackageSummary {
   biePackageId: number;
   libraryId: number;
+  name: string;
   versionId: string;
   versionName: string;
   description: string;
@@ -34,6 +36,7 @@ export class BiePackageSummary {
 export class BiePackageDetails {
   biePackageId: number;
   libraryId: number;
+  name: string;
   versionId: string;
   versionName: string;
   description: string;
@@ -44,17 +47,12 @@ export class BiePackageDetails {
   owner: ScoreUser;
   created: WhoAndWhen;
   lastUpdated: WhoAndWhen;
-
-  sourceBiePackageId: number;
-  sourceBiePackageVersionName: string;
-  sourceBiePackageVersionId: string;
-  sourceAction: string;
-  sourceTimestamp: Date;
 }
 
 export class BiePackage {
   biePackageId: number;
   libraryId: number;
+  name: string;
   versionId: string;
   versionName: string;
   description: string;
@@ -68,8 +66,9 @@ export class BiePackage {
   lastUpdatedBy: ScoreUser;
 
   sourceBiePackageId: number;
-  sourceBiePackageVersionName: string;
+  sourceBiePackageName: string;
   sourceBiePackageVersionId: string;
+  sourceBiePackageVersionName: string;
   sourceAction: string;
   sourceTimestamp: Date;
 }
@@ -78,6 +77,7 @@ export class BiePackageListRequest {
   library: LibrarySummary = new LibrarySummary();
   releases: ReleaseSummary[] = [];
   filters: {
+    name: string;
     versionId: string;
     versionName: string;
     description: string;
@@ -141,6 +141,7 @@ export class BiePackageListRequest {
     };
 
     this.filters = {
+      name: params.get('name') || '',
       versionId: params.get('versionId') || '',
       versionName: params.get('versionName') || '',
       description: params.get('description') || '',
@@ -176,6 +177,9 @@ export class BiePackageListRequest {
     }
     if (this.updatedDate.end) {
       params = params.set('updateEnd', '' + this.updatedDate.end.getTime());
+    }
+    if (this.filters.name && this.filters.name.length > 0) {
+      params = params.set('name', '' + this.filters.name);
     }
     if (this.filters.versionId && this.filters.versionId.length > 0) {
       params = params.set('versionId', '' + this.filters.versionId);

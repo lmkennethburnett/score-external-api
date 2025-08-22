@@ -10,9 +10,9 @@ import java.util.Collection;
 
 public interface BiePackageCommandRepository {
 
-    BiePackageId create(LibraryId libraryId, String versionId, String versionName, String description);
+    BiePackageId create(LibraryId libraryId, String name, String versionId, String versionName, String description);
 
-    boolean update(BiePackageId biePackageId, String versionId, String versionName, String description);
+    boolean update(BiePackageId biePackageId, String name, String versionId, String versionName, String description);
 
     boolean updateState(BiePackageId biePackageId, BieState state);
 

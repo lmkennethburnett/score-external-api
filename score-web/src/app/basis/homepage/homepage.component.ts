@@ -157,7 +157,7 @@ export class HomepageComponent implements OnInit, AfterViewInit {
         this.library = this.libraries.filter(e => e.libraryId === savedLibraryId)[0];
       }
       if (!this.library || !this.library.libraryId) {
-        this.library = this.libraries[0];
+        this.library = this.libraries.find(e => e.isDefault) || this.libraries[0];
       }
       if (this.library) {
         saveLibrary(this.auth.getUserToken(), this.library.libraryId);

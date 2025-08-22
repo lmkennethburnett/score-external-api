@@ -126,8 +126,9 @@ export class BiePackageListComponent implements OnInit {
     {id: 'select', name: '', isActive: true},
     {id: 'state', name: 'State', isActive: true},
     {id: 'branch', name: 'Branch', isActive: true},
-    {id: 'versionName', name: 'Package Version Name', isActive: true},
-    {id: 'versionId', name: 'Package Version ID', isActive: true},
+    {id: 'name', name: 'Package Name', isActive: true},
+    {id: 'versionId', name: 'Version ID', isActive: true},
+    {id: 'versionName', name: 'Version Name', isActive: true},
     {id: 'owner', name: 'Owner', isActive: true},
     {id: 'description', name: 'Description', isActive: true},
     {id: 'lastUpdateTimestamp', name: 'Last Update Timestamp', isActive: true},
@@ -149,14 +150,19 @@ export class BiePackageListComponent implements OnInit {
               displayedColumns.push('branch');
             }
             break;
-          case 'Package Version Name':
+          case 'Package Name':
             if (column.selected) {
-              displayedColumns.push('versionName');
+              displayedColumns.push('name');
             }
             break;
-          case 'Package Version ID':
+          case 'Version ID':
             if (column.selected) {
               displayedColumns.push('versionId');
+            }
+            break;
+          case 'Version Name':
+            if (column.selected) {
+              displayedColumns.push('versionName');
             }
             break;
           case 'Owner':
@@ -322,7 +328,7 @@ export class BiePackageListComponent implements OnInit {
         this.request.library = this.libraries.filter(e => e.libraryId === savedLibraryId)[0];
       }
       if (!this.request.library || !this.request.library.libraryId) {
-        this.request.library = this.libraries[0];
+        this.request.library = this.libraries.find(e => e.isDefault) || this.libraries[0];
       }
       if (this.request.library) {
         saveLibrary(this.auth.getUserToken(), this.request.library.libraryId);

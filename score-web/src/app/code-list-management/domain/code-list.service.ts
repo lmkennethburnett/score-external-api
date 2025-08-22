@@ -24,7 +24,7 @@ export class CodeListService {
   getCodeListList(request: CodeListListEntryRequest): Observable<PageResponse<CodeListListEntry>> {
     let params = new HttpParams()
         .set('libraryId', '' + request.library.libraryId)
-        .set('releaseId', '' + request.release.releaseId)
+        .set('releaseId', '' + (request.release?.releaseId || 0))
         .set('pageIndex', '' + request.page.pageIndex)
         .set('pageSize', '' + request.page.pageSize);
 

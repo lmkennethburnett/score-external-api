@@ -9,6 +9,7 @@ import java.util.List;
 public record BiePackageSummaryRecord(
         BiePackageId biePackageId,
         LibraryId libraryId,
+        String name,
         String versionId,
         String versionName,
         String description,

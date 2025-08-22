@@ -74,6 +74,12 @@ public class BiePackage extends TableImpl<BiePackageRecord> {
     public final TableField<BiePackageRecord, ULong> LIBRARY_ID = createField(DSL.name("library_id"), SQLDataType.BIGINTUNSIGNED.nullable(false), this, "A foreign key pointed to a library of the current record.");
 
     /**
+     * The column <code>oagi.bie_package.name</code>. A text field used for
+     * containing the package name.
+     */
+    public final TableField<BiePackageRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(200).nullable(false), this, "A text field used for containing the package name.");
+
+    /**
      * The column <code>oagi.bie_package.version_id</code>. A text field used
      * for containing the release package version ID value (ex: CDM_1.1.0). All
      * BIEs released as part of the same CDM package should have the same
@@ -231,6 +237,11 @@ public class BiePackage extends TableImpl<BiePackageRecord> {
     @Override
     public UniqueKey<BiePackageRecord> getPrimaryKey() {
         return Keys.KEY_BIE_PACKAGE_PRIMARY;
+    }
+
+    @Override
+    public List<UniqueKey<BiePackageRecord>> getUniqueKeys() {
+        return Arrays.asList(Keys.KEY_BIE_PACKAGE_BIE_PACKAGE_NAME_VERSION_UK);
     }
 
     @Override

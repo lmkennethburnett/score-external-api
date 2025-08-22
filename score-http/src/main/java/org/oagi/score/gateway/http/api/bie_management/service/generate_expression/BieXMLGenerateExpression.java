@@ -249,11 +249,14 @@ public class BieXMLGenerateExpression implements BieGenerateExpression, Initiali
     private void attachBiePackageAttributes(Element node, TopLevelAsbiepSummaryRecord topLevelAsbiep, BiePackageSummaryRecord biePackage) {
         List<Element> appinfoList = new ArrayList<>();
         if (biePackage != null) {
-            if (hasLength(biePackage.versionName())) {
-                appinfoList.add(makeAppInfo("Package Version Name", true, biePackage.versionName(), "token"));
+            if (hasLength(biePackage.name())) {
+                appinfoList.add(makeAppInfo("Package Name", true, biePackage.name(), "token"));
             }
             if (hasLength(biePackage.versionId())) {
                 appinfoList.add(makeAppInfo("Package Version ID", true, biePackage.versionId(), "token"));
+            }
+            if (hasLength(biePackage.versionName())) {
+                appinfoList.add(makeAppInfo("Package Version Name", true, biePackage.versionName(), "token"));
             }
             if (hasLength(biePackage.description())) {
                 appinfoList.add(makeAppInfo("Package Description", true, biePackage.description(), "token"));

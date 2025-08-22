@@ -2,7 +2,7 @@ import {Component, Inject, OnInit} from '@angular/core';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {PlantUmlService} from '../../cc-management/plantuml-diagram/domain/plantuml.service';
+import {PlantUmlService} from '../../common/plantuml-diagram/plantuml.service';
 import {ReleaseService} from '../domain/release.service';
 
 @Component({

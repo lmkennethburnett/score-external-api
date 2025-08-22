@@ -6,30 +6,35 @@
 
     <groupId>org.oagi.score.e2e</groupId>
     <artifactId>score-e2e</artifactId>
-    <version>3.4.0</version>
+    <version>3.4.1</version>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jOOQ.configuration.skip>true</jOOQ.configuration.skip>
 
-        <selenium.version>4.32.0</selenium.version>
-        <junit.version>5.12.2</junit.version>
-        <junit.platform.version>1.12.2</junit.platform.version>
+        <db.url>jdbc:mariadb://localhost:3306/oagi</db.url>
+        <db.user>oagi</db.user>
+        <db.password>oagi</db.password>
+
+        <selenium.version>4.34.0</selenium.version>
+        <junit.version>5.13.4</junit.version>
+        <junit.platform.version>1.13.4</junit.platform.version>
         <slf4j.version>2.0.17</slf4j.version>
         <log4j.version>2.24.3</log4j.version>
         <jackson.version>2.19.0</jackson.version>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
         <commons-math3.version>3.6.1</commons-math3.version>
-        <commons-io.version>2.19.0</commons-io.version>
-        <commons-csv.version>1.14.0</commons-csv.version>
+        <commons-io.version>2.20.0</commons-io.version>
+        <commons-csv.version>1.14.1</commons-csv.version>
         <lombok.version>1.18.38</lombok.version>
         <awaitility.version>4.3.0</awaitility.version>
         <snakeyaml.version>2.4</snakeyaml.version>
-        <mariadb-client.version>3.5.3</mariadb-client.version>
+        <mariadb-client.version>3.5.4</mariadb-client.version>
         <hikariCP.version>6.3.0</hikariCP.version>
-        <jOOQ.version>3.20.3</jOOQ.version>
-        <jOOQ.configuration.skip>true</jOOQ.configuration.skip>
+        <jOOQ.version>3.20.5</jOOQ.version>
     </properties>
 
     <dependencies>
@@ -168,9 +173,9 @@
 
                     <jdbc>
                         <driver>org.mariadb.jdbc.Driver</driver>
-                        <url>jdbc:mariadb://localhost:3306/oagi</url>
-                        <user>oagi</user>
-                        <password>oagi</password>
+                        <url>${db.url}</url>
+                        <user>${db.user}</user>
+                        <password>${db.password}</password>
                     </jdbc>
 
                     <generator>

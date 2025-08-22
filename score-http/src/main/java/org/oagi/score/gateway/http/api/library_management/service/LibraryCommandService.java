@@ -83,7 +83,7 @@ public class LibraryCommandService {
         return command(requester).update(
                 request.libraryId(),
                 request.type(), request.name(), request.organization(), request.description(),
-                request.link(), request.domain(), null);
+                request.link(), request.domain(), request.state(), request.isDefault());
     }
 
     public boolean discard(ScoreUser requester, LibraryId libraryId) {

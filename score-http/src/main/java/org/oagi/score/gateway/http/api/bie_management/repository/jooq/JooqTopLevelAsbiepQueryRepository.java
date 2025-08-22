@@ -149,26 +149,17 @@ public class JooqTopLevelAsbiepQueryRepository extends JooqBaseRepository implem
                             TOP_LEVEL_ASBIEP.INVERSE_MODE,
 
                             ASBIEP.CREATION_TIMESTAMP,
-                            TOP_LEVEL_ASBIEP.LAST_UPDATE_TIMESTAMP,
-
-                            LIBRARY.LIBRARY_ID,
-                            LIBRARY.NAME.as("library_name"),
-                            LIBRARY.STATE.as("library_state"),
-                            LIBRARY.IS_READ_ONLY,
-
-                            RELEASE.RELEASE_ID,
-                            RELEASE.RELEASE_NUM,
-                            RELEASE.STATE.as("release_state")
-                    ), ownerFields(), creatorFields(), updaterFields()))
+                            TOP_LEVEL_ASBIEP.LAST_UPDATE_TIMESTAMP
+                    ), libraryFields(), releaseFields(), ownerFields(), creatorFields(), updaterFields()))
                     .from(TOP_LEVEL_ASBIEP)
-                    .join(RELEASE).on(TOP_LEVEL_ASBIEP.RELEASE_ID.eq(RELEASE.RELEASE_ID))
-                    .join(LIBRARY).on(RELEASE.LIBRARY_ID.eq(LIBRARY.LIBRARY_ID))
                     .join(ASBIEP).on(and(
                             TOP_LEVEL_ASBIEP.ASBIEP_ID.eq(ASBIEP.ASBIEP_ID),
                             TOP_LEVEL_ASBIEP.TOP_LEVEL_ASBIEP_ID.eq(ASBIEP.OWNER_TOP_LEVEL_ASBIEP_ID)
                     ))
                     .join(ASCCP_MANIFEST).on(ASBIEP.BASED_ASCCP_MANIFEST_ID.eq(ASCCP_MANIFEST.ASCCP_MANIFEST_ID))
                     .join(ASCCP).on(ASCCP_MANIFEST.ASCCP_ID.eq(ASCCP.ASCCP_ID))
+                    .join(releaseTable()).on(releaseTablePk().eq(TOP_LEVEL_ASBIEP.RELEASE_ID))
+                    .join(libraryTable()).on(libraryTablePk().eq(releaseTable().LIBRARY_ID))
                     .join(ownerTable()).on(ownerTablePk().eq(TOP_LEVEL_ASBIEP.OWNER_USER_ID))
                     .join(creatorTable()).on(creatorTablePk().eq(ASBIEP.CREATED_BY))
                     .join(updaterTable()).on(updaterTablePk().eq(TOP_LEVEL_ASBIEP.LAST_UPDATED_BY));
@@ -182,18 +173,8 @@ public class JooqTopLevelAsbiepQueryRepository extends JooqBaseRepository implem
                                 new TopLevelAsbiepId(record.get(TOP_LEVEL_ASBIEP.BASED_TOP_LEVEL_ASBIEP_ID).toBigInteger()) : null;
                 AsbiepId asbiepId = (record.get(ASBIEP.ASBIEP_ID) != null) ?
                         new AsbiepId(record.get(ASBIEP.ASBIEP_ID).toBigInteger()) : null;
-                LibrarySummaryRecord library = new LibrarySummaryRecord(
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(LIBRARY.NAME.as("library_name")),
-                        record.get(LIBRARY.STATE.as("library_state")),
-                        (byte) 1 == record.get(LIBRARY.IS_READ_ONLY)
-                );
-                ReleaseSummaryRecord release = new ReleaseSummaryRecord(
-                        new ReleaseId(record.get(RELEASE.RELEASE_ID).toBigInteger()),
-                        new LibraryId(record.get(LIBRARY.LIBRARY_ID).toBigInteger()),
-                        record.get(RELEASE.RELEASE_NUM),
-                        ReleaseState.valueOf(record.get(RELEASE.STATE.as("release_state")))
-                );
+                LibrarySummaryRecord library = fetchLibrarySummary(record);
+                ReleaseSummaryRecord release = fetchReleaseSummary(record);
 
                 return new TopLevelAsbiepSummaryRecord(library, release,
                         topLevelAsbiepId,

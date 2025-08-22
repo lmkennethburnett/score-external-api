@@ -73,13 +73,15 @@ public class ReleaseQueryService {
                 .filter(ReleaseSummaryRecord::isWorkingRelease)
                 .findAny()
                 .orElse(null);
-        releases.remove(workingRelease);
+        if (workingRelease != null) {
+            releases.remove(workingRelease);
 
-        if (!isReadOnly) {
-            if (requester.hasRole(DEVELOPER)) {
-                releases.add(0, workingRelease);
-            } else {
-                releases.add(workingRelease);
+            if (!isReadOnly) {
+                if (requester.hasRole(DEVELOPER)) {
+                    releases.add(0, workingRelease);
+                } else {
+                    releases.add(workingRelease);
+                }
             }
         }
 

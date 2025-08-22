@@ -1,6 +1,7 @@
 package org.oagi.score.gateway.http.api.xbt_management.repository;
 
 import org.oagi.score.gateway.http.api.release_management.model.ReleaseId;
+import org.oagi.score.gateway.http.api.xbt_management.model.XbtDetailsRecord;
 import org.oagi.score.gateway.http.api.xbt_management.model.XbtManifestId;
 import org.oagi.score.gateway.http.api.xbt_management.model.XbtSummaryRecord;
 
@@ -14,5 +15,7 @@ public interface XbtQueryRepository {
     List<XbtSummaryRecord> getXbtSummaryList(Collection<ReleaseId> releaseIdList);
 
     List<XbtSummaryRecord> getXbtSummaryList(ReleaseId releaseId);
+
+    XbtDetailsRecord getXbtDetails(XbtManifestId xbtManifestId);
 
 }

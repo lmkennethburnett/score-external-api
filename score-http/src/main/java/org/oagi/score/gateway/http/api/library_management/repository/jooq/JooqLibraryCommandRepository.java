@@ -1,6 +1,7 @@
 package org.oagi.score.gateway.http.api.library_management.repository.jooq;
 
 import org.jooq.DSLContext;
+import org.jooq.UpdateSetMoreStep;
 import org.oagi.score.gateway.http.api.library_management.model.LibraryId;
 import org.oagi.score.gateway.http.api.library_management.repository.LibraryCommandRepository;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
@@ -49,18 +50,31 @@ public class JooqLibraryCommandRepository extends JooqBaseRepository implements 
     @Override
     public boolean update(LibraryId libraryId,
                           String type, String name, String organization, String description,
-                          String link, String domain, String state) {
+                          String link, String domain, String state, Boolean isDefault) {
 
         LocalDateTime timestamp = LocalDateTime.now();
 
-        int res = dslContext().update(LIBRARY)
+        UpdateSetMoreStep step = dslContext().update(LIBRARY)
                 .set(LIBRARY.TYPE, type)
                 .set(LIBRARY.NAME, name)
                 .set(LIBRARY.ORGANIZATION, organization)
                 .set(LIBRARY.LINK, link)
                 .set(LIBRARY.DOMAIN, domain)
                 .set(LIBRARY.DESCRIPTION, description)
-                .set(LIBRARY.STATE, state)
+                .set(LIBRARY.STATE, state);
+
+        if (isDefault != null) {
+            if (isDefault) {
+                dslContext().update(LIBRARY)
+                        .set(LIBRARY.IS_DEFAULT, (byte) 0)
+                        .where(LIBRARY.LIBRARY_ID.notEqual(valueOf(libraryId)))
+                        .execute();
+            }
+
+            step = step.set(LIBRARY.IS_DEFAULT, (byte) (isDefault ? 1 : 0));
+        }
+
+        int res = step
                 .set(LIBRARY.LAST_UPDATED_BY, valueOf(requester().userId()))
                 .set(LIBRARY.LAST_UPDATE_TIMESTAMP, timestamp)
                 .where(LIBRARY.LIBRARY_ID.eq(valueOf(libraryId)))

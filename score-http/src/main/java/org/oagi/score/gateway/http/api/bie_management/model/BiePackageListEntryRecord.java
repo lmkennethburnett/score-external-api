@@ -11,6 +11,7 @@ import java.util.List;
 public record BiePackageListEntryRecord(
         BiePackageId biePackageId,
         LibraryId libraryId,
+        String name,
         String versionId,
         String versionName,
         String description,

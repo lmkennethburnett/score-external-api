@@ -115,6 +115,13 @@ public class Library extends TableImpl<LibraryRecord> {
     public final TableField<LibraryRecord, Byte> IS_READ_ONLY = createField(DSL.name("is_read_only"), SQLDataType.TINYINT.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.TINYINT)), this, "Indicates if the library is read-only (0 = False, 1 = True).");
 
     /**
+     * The column <code>oagi.library.is_default</code>. Indicates if the library
+     * is the default (0 = False, 1 = True). The default library is shown first
+     * if the user has no preference.
+     */
+    public final TableField<LibraryRecord, Byte> IS_DEFAULT = createField(DSL.name("is_default"), SQLDataType.TINYINT.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.TINYINT)), this, "Indicates if the library is the default (0 = False, 1 = True). The default library is shown first if the user has no preference.");
+
+    /**
      * The column <code>oagi.library.created_by</code>. Foreign key to the
      * APP_USER table referring to the user who creates the record.
      */

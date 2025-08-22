@@ -18,7 +18,7 @@
           <mat-select [(ngModel)]="request.release"
                       (ngModelChange)="onChange('branch', request.release); onSearch();">
             <mat-select-trigger class="d-flex">
-              <span>{{ request.release.releaseNum }}</span>
+              <span>{{ request.release?.releaseNum }}</span>
             </mat-select-trigger>
             <mat-option>
               <ngx-mat-select-search [formControl]="releaseListFilterCtrl"

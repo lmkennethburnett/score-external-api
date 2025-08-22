@@ -10,7 +10,7 @@ import java.util.Collection;
 
 public record BiePackageListFilterCriteria(
         LibraryId libraryId,
-        String versionId, String versionName, String description,
+        String name, String versionId, String versionName, String description,
         String den, String businessTerm, String version, String remark,
         Collection<BieState> states, Collection<ReleaseId> releaseIds,
         Collection<BiePackageId> biePackageIds,

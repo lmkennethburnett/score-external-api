@@ -12,6 +12,7 @@ import org.oagi.score.gateway.http.api.cc_management.model.dt.DtSummaryRecord;
 import org.oagi.score.gateway.http.api.cc_management.model.dt_sc.DtScSummaryRecord;
 import org.oagi.score.gateway.http.api.code_list_management.model.CodeListSummaryRecord;
 import org.oagi.score.gateway.http.api.namespace_management.model.NamespaceSummaryRecord;
+import org.oagi.score.gateway.http.api.xbt_management.model.XbtSummaryRecord;
 import org.oagi.score.gateway.http.common.model.ScoreUser;
 import org.oagi.score.gateway.http.common.repository.jooq.RepositoryFactory;
 import org.oagi.score.gateway.http.common.repository.jooq.entity.tables.records.XbtRecord;
@@ -159,21 +160,14 @@ public class LogSnapshotResolver {
         return userProperties;
     }
 
-    public Map<String, Object> getXbt(ULong xbtId) {
-        if (xbtId == null || xbtId.longValue() <= 0L) {
-            return new HashMap();
-        }
-
-        XbtRecord xbtRecord = dslContext.selectFrom(XBT)
-                .where(XBT.XBT_ID.eq(xbtId))
-                .fetchOptional().orElse(null);
-        if (xbtRecord == null) {
+    public Map<String, Object> getXbt(XbtSummaryRecord xbt) {
+        if (xbt == null) {
             return new HashMap();
         }
 
         Map<String, Object> userProperties = new HashMap();
-        userProperties.put("guid", xbtRecord.getGuid());
-        userProperties.put("name", xbtRecord.getName());
+        userProperties.put("guid", xbt.guid().value());
+        userProperties.put("name", xbt.name());
         return userProperties;
     }
 }
