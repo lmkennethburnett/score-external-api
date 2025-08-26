@@ -1,16 +1,26 @@
 package org.oagi.score.gateway.http.api.external.controller;
 
+import org.oagi.score.gateway.http.api.bie_management.model.TopLevelAsbiepId;
 import org.oagi.score.gateway.http.api.cc_management.model.CcListEntryRecord;
 import org.oagi.score.gateway.http.api.cc_management.model.CcListTypes;
 import org.oagi.score.gateway.http.api.cc_management.model.CcState;
+import org.oagi.score.gateway.http.api.cc_management.model.CcType;
+import org.oagi.score.gateway.http.api.cc_management.model.acc.AccManifestId;
 import org.oagi.score.gateway.http.api.cc_management.model.acc.OagisComponentType;
 import org.oagi.score.gateway.http.api.cc_management.model.asccp.AsccpManifestId;
 import org.oagi.score.gateway.http.api.cc_management.model.asccp.AsccpType;
+import org.oagi.score.gateway.http.api.cc_management.model.bccp.BccpManifestId;
+import org.oagi.score.gateway.http.api.cc_management.model.dt.DtManifestId;
 import org.oagi.score.gateway.http.api.cc_management.repository.criteria.CcListFilterCriteria;
 import org.oagi.score.gateway.http.api.cc_management.service.CcQueryService;
 import org.oagi.score.gateway.http.api.cc_management.service.dsl.CcQueryInterpreter;
+import org.oagi.score.gateway.http.api.code_list_management.model.CodeListManifestId;
 import org.oagi.score.gateway.http.api.external.model.ExternalChildComponentRecord;
 import org.oagi.score.gateway.http.api.external.service.ExternalComponentsService;
+import org.oagi.score.gateway.http.api.graph.model.FindUsagesRequest;
+import org.oagi.score.gateway.http.api.graph.model.FindUsagesResponse;
+import org.oagi.score.gateway.http.api.graph.model.Graph;
+import org.oagi.score.gateway.http.api.graph.service.GraphService;
 import org.oagi.score.gateway.http.api.library_management.model.LibraryId;
 import org.oagi.score.gateway.http.api.library_management.model.LibraryListEntry;
 import org.oagi.score.gateway.http.api.library_management.repository.criteria.LibraryListFilterCriteria;
@@ -36,6 +46,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,6 +86,9 @@ public class ExternalComponentsController {
         @Autowired
         private ReleaseQueryService releaseQueryService;
 
+        @Autowired
+        private GraphService graphService;
+
         @RequestMapping(value = "/ext/libraries", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public PageResponse<LibraryListEntry> getLibraryList(@AuthenticationPrincipal AuthenticatedPrincipal user,
                         @RequestParam(name = "type", required = false) String type,
@@ -96,7 +111,7 @@ public class ExternalComponentsController {
 
                 PageRequest pageRequest = pageRequest(pageIndex, pageSize, orderBy);
 
-                ScoreUser requester = sessionService.getScoreSystemUser(); 
+                ScoreUser requester = sessionService.getScoreSystemUser();
 
                 var resultAndCount = libraryQueryService.getLibraryList(requester,
                                 filterCriteria, pageRequest);
@@ -150,7 +165,7 @@ public class ExternalComponentsController {
                 );
 
                 PageRequest pageRequest = pageRequest(pageIndex, pageSize, orderBy);
-                ScoreUser requester = sessionService.getScoreSystemUser(); 
+                ScoreUser requester = sessionService.getScoreSystemUser();
 
                 var resultAndCount = releaseQueryService.getReleaseList(requester,
                                 filterCriteria, pageRequest);
@@ -193,7 +208,7 @@ public class ExternalComponentsController {
 
                 ReleaseId releaseId = service.getReleaseId(libraryName, releaseVersion);
 
-                ScoreUser requester = sessionService.getScoreSystemUser(); 
+                ScoreUser requester = sessionService.getScoreSystemUser();
 
                 CcListFilterCriteria filterCriteria = CcListFilterCriteria.builder(releaseId)
                                 .den(den)
@@ -281,16 +296,17 @@ public class ExternalComponentsController {
                         @RequestParam(name = "guid", required = true) String guid)
                         throws Exception {
 
-                AsccpManifestId asccpManifestId = service.getAsccpManifestId(service.getReleaseId(libraryName,releaseVersion),guid);
-                if (asccpManifestId==null) {
-                        return new ResponseEntity<>("Component not found",HttpStatus.NOT_FOUND);
+                AsccpManifestId asccpManifestId = service
+                                .getAsccpManifestId(service.getReleaseId(libraryName, releaseVersion), guid);
+                if (asccpManifestId == null) {
+                        return new ResponseEntity<>("Component not found", HttpStatus.NOT_FOUND);
                 }
                 ExportStandaloneSchemaResponse response = service.exportStandaloneSchema(
                                 sessionService.getScoreSystemUser(),
                                 List.of(asccpManifestId));
-                                // Arrays.stream(asccpManifestIdList.split(","))
-                                //                 .map(e -> new AsccpManifestId(new BigInteger(e)))
-                                //                 .collect(Collectors.toList()));
+                // Arrays.stream(asccpManifestIdList.split(","))
+                // .map(e -> new AsccpManifestId(new BigInteger(e)))
+                // .collect(Collectors.toList()));
 
                 return ResponseEntity.ok()
                                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -305,6 +321,96 @@ public class ExternalComponentsController {
         @RequestMapping(value = "/ext/auth", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<String> auth() {
                 return ResponseEntity.ok("Authenticated");
+        }
+
+        @RequestMapping(value = "/ext/find_usages/{type}/{id:[\\d]+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        public FindUsagesResponse findUsages(@AuthenticationPrincipal AuthenticatedPrincipal user,
+                        @PathVariable("type") String type,
+                        @PathVariable("id") BigInteger manifestId) {
+                CcType ccType = CcType.valueOf(type.toUpperCase());
+                ScoreUser scoreUser = sessionService.getScoreSystemUser();
+
+                switch (ccType) {
+                        case ACC:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new AccManifestId(manifestId)));
+                        case ASCCP:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new AsccpManifestId(manifestId)));
+                        case BCCP:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new BccpManifestId(manifestId)));
+                        case DT:
+                                return graphService.findUsages(
+                                                scoreUser,
+                                                new FindUsagesRequest(ccType, new DtManifestId(manifestId)));
+                }
+
+                throw new IllegalArgumentException("Unknown graph type " + type);
+        }
+
+        @RequestMapping(value = "/ext/graphs/{type}/{id:[\\d]+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        public Map<String, Object> getGraph(@AuthenticationPrincipal AuthenticatedPrincipal user,
+                        @PathVariable("type") String type,
+                        @PathVariable("id") BigInteger id,
+                        @RequestParam(value = "q", required = false) String query) {
+
+                ScoreUser scoreUser = sessionService.getScoreSystemUser();
+                Graph graph;
+                switch (type.toLowerCase()) {
+                        case "acc":
+                        case "extension":
+                                graph = graphService.getAccGraph(
+                                                scoreUser, new AccManifestId(id));
+                                break;
+
+                        case "asccp":
+                                graph = graphService.getAsccpGraph(
+                                                scoreUser, new AsccpManifestId(id), false);
+                                break;
+
+                        case "bccp":
+                                graph = graphService.getBccpGraph(
+                                                scoreUser, new BccpManifestId(id));
+                                break;
+
+                        case "dt":
+                                graph = graphService.getDtGraph(
+                                                scoreUser, new DtManifestId(id));
+                                break;
+
+                        case "top_level_asbiep":
+                                graph = graphService.getBieGraph(
+                                                scoreUser, new TopLevelAsbiepId(id));
+                                break;
+
+                        case "code_list":
+                                graph = graphService.getCodeListGraph(
+                                                scoreUser, new CodeListManifestId(id));
+                                break;
+
+                        default:
+                                throw new UnsupportedOperationException();
+                }
+
+                Map<String, Object> response = new HashMap();
+
+                if (StringUtils.hasLength(query)) {
+                        Collection<List<String>> paths = graph.findPaths(type + id, query);
+                        response.put("query", query);
+                        response.put("paths", paths.stream()
+                                        .map(e -> e.stream()
+                                                        .filter(item -> !item.matches("ascc\\d+|bcc\\d+|bdt\\d+"))
+                                                        .collect(Collectors.joining(">")))
+                                        .collect(Collectors.toList()));
+                } else {
+                        response.put("graph", graph);
+                }
+
+                return response;
         }
 
 }

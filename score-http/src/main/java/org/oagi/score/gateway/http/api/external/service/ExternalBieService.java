@@ -1,46 +1,27 @@
 package org.oagi.score.gateway.http.api.external.service;
 
-import org.jooq.DSLContext;
-
 import org.oagi.score.gateway.http.api.bie_management.model.BiePackageId;
 import org.oagi.score.gateway.http.api.bie_management.model.TopLevelAsbiepId;
+import org.oagi.score.gateway.http.api.external.repository.ExternalBieRepository;
 import org.oagi.score.gateway.http.common.model.Guid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.ASBIEP;
-import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.BIE_PACKAGE;
-import static org.oagi.score.gateway.http.common.repository.jooq.entity.Tables.LIBRARY;
 
 @Service
 @Transactional(readOnly = true)
 public class ExternalBieService {
 
     @Autowired
-    private DSLContext dslContext;
+    ExternalBieRepository externalBieRepository;
 
     public BiePackageId getBiePackageId(String libraryName, String biePackageName, String biePackageVersionId) {
-
-        BiePackageId biePackageId = dslContext.select(
-                BIE_PACKAGE.BIE_PACKAGE_ID)
-                .from(BIE_PACKAGE)
-                .join(LIBRARY).on(LIBRARY.LIBRARY_ID.eq(BIE_PACKAGE.LIBRARY_ID))
-                                //TODO: change to package name when introduced into db
-                .where(BIE_PACKAGE.VERSION_NAME.eq(biePackageName).and(BIE_PACKAGE.VERSION_ID.eq(biePackageVersionId)))
-                .and(LIBRARY.NAME.eq(libraryName))
-                .fetchOneInto(BiePackageId.class);
-        return biePackageId;
+        return externalBieRepository.getBiePackageId(libraryName, biePackageName, biePackageVersionId);
     }
 
-        public TopLevelAsbiepId getTopLevelAsbiepId(Guid guid) {
-
-        TopLevelAsbiepId topLevelAsbiepId = dslContext.select(
-                ASBIEP.OWNER_TOP_LEVEL_ASBIEP_ID)
-                .from(ASBIEP)
-                .where(ASBIEP.GUID.eq(guid.toString()))
-                .fetchOneInto(TopLevelAsbiepId.class);
-        return topLevelAsbiepId;
+    public TopLevelAsbiepId getTopLevelAsbiepId(Guid guid) {
+        return externalBieRepository.getTopLevelAsbiepId(guid);
     }
 
     /*
