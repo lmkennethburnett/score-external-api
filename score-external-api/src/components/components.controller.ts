@@ -99,7 +99,7 @@ export class ComponentsController {
       + ' then the default library will be connectSpec (OAGIS).'
   })
   @ApiProduces()
-  @ApiOkResponse({ description: 'OK', type: [Release] })
+  @ApiOkResponse({ description: 'OK', type: Releases })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiBearerAuth()
   getReleases(
@@ -115,7 +115,7 @@ export class ComponentsController {
       + ' then the default library will be connectSpec (OAGIS).'
   })
   @ApiProduces()
-  @ApiOkResponse({ description: 'OK', type: Releases })
+  @ApiOkResponse({ description: 'OK', type: Release })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiBearerAuth()
   getLatestRelease(

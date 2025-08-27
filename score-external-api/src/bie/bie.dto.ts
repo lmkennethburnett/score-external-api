@@ -117,27 +117,24 @@ export class Bie {
 @Exclude()
 export class BIEs {
     @Expose()
-    @ApiProperty()
+    @ApiProperty({ type: [Bie] })
     @Type(() => Bie)
-    public bies: Bie[];
+    public businessInformationEntities: Bie[];
 }
 
 @Exclude()
-export class BieWithChildren {
+export class BieWithChildren extends Bie {
 
     @ApiProperty()
     @Expose()
-    public bie: Bie;
-
-    @ApiProperty()
-    @Expose()
-    public childBies: Bie[];
+    @ApiProperty({ type: [Bie] })
+    public childBusinessInformationEntities: Bie[];
 }
 
 @Exclude()
 export class BiesWithChildren {
     @Expose()
-    @ApiProperty()
+    @ApiProperty({ type: [BieWithChildren] })
     @Type(() => BieWithChildren)
-    public bies: BieWithChildren[];
+    public businessInformationEntities: BieWithChildren[];
 }

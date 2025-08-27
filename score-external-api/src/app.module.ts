@@ -14,6 +14,7 @@ import { BieService } from './bie/bie.service';
 import config from './config/config';
 import { AxiosHelper } from './common/gateway_api_helper';
 import { CacheHelper } from './common/cache_helper';
+import { BieControllerDeprecated } from './bie/bie.controller_deprecated';
 
 
 @Module({
@@ -45,7 +46,8 @@ import { CacheHelper } from './common/cache_helper';
   controllers: [
     AppController,
     ComponentsController,
-    BieController
+    BieController,
+    BieControllerDeprecated
   ],
   providers: [
     AppService,

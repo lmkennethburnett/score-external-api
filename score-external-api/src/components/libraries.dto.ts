@@ -38,4 +38,3 @@ export class Libraries {
     @Type(() => Library)
     public libraries: Library[];
 }
-

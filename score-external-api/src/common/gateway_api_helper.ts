@@ -1,18 +1,15 @@
-import { HttpService } from "@nestjs/axios";
 import { HttpException, HttpStatus, Injectable, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AxiosError } from "axios";
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { catchError, firstValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
+
 
 @Injectable()
 export class AxiosHelper {
 
 
     constructor(
-        private readonly httpService: HttpService,
         private readonly configService: ConfigService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache) { }
 
@@ -47,5 +44,43 @@ export class AxiosHelper {
         throw new HttpException('Could not retrieve data from Score', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    /*
+    async getFromLocal(localRoute: string): Promise<any> {
+
+        //const cachePrefix = await this.getCachePrefix() ?? 'keyv';
+
+        console.log(localRoute);
+
+        var response = this.cacheManager.get(cachePrefix + ":/api" + localRoute);
+
+        console.log("local: " + JSON.stringify(response));
+        if (!response || Object.keys(response).length === 0) {
+
+            const localServerName = this.configService.get<string>('local_server');
+            const localPort = this.configService.get<string>('api_port') ?? 3000
+            const localServer = localServerName && localPort ? localServerName + ":" + localPort : undefined;
+            const localUrl = localServer + localRoute;
+            console.log("trying local url " + localUrl);
+
+            //use cache to avoid repeated calls to the main application, direct cache access to
+            response = await firstValueFrom(this.httpService.get(localUrl, {
+                validateStatus: function (status: number) {
+                    return status == 200; // Resolve only if the status code is 200
+                }
+            })
+                .pipe(map(response => {
+                    return response.data;
+                }))
+                .pipe(
+                    catchError((error: AxiosError) => {
+                        this.handleAxiosError(error);
+                    }),
+                )
+            )
+        }
+        return response;
+    }
+
+*/
 
 }

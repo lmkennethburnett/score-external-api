@@ -65,7 +65,7 @@ export class ComponentsService {
             })
             .pipe(map(response => {
                 response.data.library = libraryName;
-                var releasesList = response.data.list;
+                var releasesList: any[] = response.data.list;
                 releasesList.forEach(release => {
                     release.lastUpdateTimestamp = release.lastUpdated.when;
                 });
@@ -171,7 +171,7 @@ export class ComponentsService {
         const componentsCache = await this.cacheHelper.getFromInMemoryCache(asccpRoute);
         if (componentsCache) {
             try {
-                return JSON.parse(componentsCache);
+                return JSON.parse(componentsCache) as Components;
             }
             catch (error) {
                 console.error("could not parse in memory components " + error);
@@ -184,9 +184,8 @@ export class ComponentsService {
                 await this.cacheHelper.addToInMemoryCache(asccpRoute, JSON.stringify(components));
                 return components;
             }
-            else {
-                return new Components();
-            }
+
+            return new Components();
         }
     }
 
@@ -221,11 +220,12 @@ export class ComponentsService {
             await firstValueFrom(
                 this.httpService.get(metadataUrl, axiosConfig)
                     .pipe(map(async response => {
-                        var componentsList = response.data.list;
+                        var componentsList: any[] = response.data.list;
                         componentsList.forEach(component => {
                             component.owner = component.owner.loginId;
                             component.definition = component.definition.content;
-                            component.tagList.forEach(tag => {
+                            const tagList: any[] = component.tagList;
+                            tagList.forEach(tag => {
                                 if (tag.name === 'Noun' || tag.name == 'BOD' || tag.name == 'Verb') {
                                     component.nounBodVerbTag = component.tagList[0].name;
                                 }
@@ -260,13 +260,13 @@ export class ComponentsService {
 
                             const updatedComponentsList = componentsList.map((parent) => ({
                                 ...parent,
-                                children: componentParentChildren.filter((rel) => rel.parentGuid === parent.guid),
+                                children: componentParentChildren.filter((rel: any) => rel.parentGuid === parent.guid),
                             }));
                             componentsList = updatedComponentsList;
-                            
+
                         }
 
-                        const componentsDto = plainToInstance(withChildren?ComponentsWithChildren:Components, { "components": componentsList },
+                        const componentsDto = plainToInstance(withChildren ? ComponentsWithChildren : Components, { "components": componentsList },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
                         return componentsDto;
                     }))
@@ -279,13 +279,8 @@ export class ComponentsService {
             )
             ;
 
-
-
         if (!components)
             return new Components();
-        else (
-            components
-        )
         return components;
 
     }

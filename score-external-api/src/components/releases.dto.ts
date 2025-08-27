@@ -80,4 +80,3 @@ export class Releases {
     public releases: Release[];
 
 }
-

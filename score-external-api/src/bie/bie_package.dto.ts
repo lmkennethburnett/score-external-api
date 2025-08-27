@@ -6,6 +6,10 @@ import { Bie, BIEs, BieWithChildren } from './bie.dto';
 export class BiePackage {
 
     @ApiProperty()
+    @Expose({ name: 'name' })
+    public packageName: string;
+
+    @ApiProperty()
     @Expose()
     public versionId: string;
 
@@ -26,31 +30,23 @@ export class BiePackage {
 @Exclude()
 export class BiePackages {
     @Expose()
-    @ApiProperty()
+    @ApiProperty({ type: [BiePackage] })
     @Type(() => BiePackage)
     public biePackages: BiePackage[];
 }
 
 @Exclude()
-export class BiePackageWithBies {
+export class BiePackageWithBies extends BiePackage {
 
-    @ApiProperty()
+    @ApiProperty({ type: [Bie] })
     @Expose()
-    public biePackage: BiePackage;
-
-    @ApiProperty()
-    @Expose()
-    public bies: BIEs;
+    public businessInformationEntities: BIEs;
 }
 
 @Exclude()
-export class BiePackageWithBiesWithChildren {
+export class BiePackageWithBiesWithChildren extends BiePackage {
 
-    @ApiProperty()
-    @Expose()
-    public biePackage: BiePackage;
-
-    @ApiProperty()
+    @ApiProperty({ type: [BieWithChildren] })
     @Expose()
     public BIEs: BieWithChildren[];
 }

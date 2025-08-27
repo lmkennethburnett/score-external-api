@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { map } from 'rxjs/operators';
-import { catchError, firstValueFrom, Observable } from 'rxjs';
+import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { ComponentsService } from 'src/components/components.service';
@@ -24,21 +24,22 @@ export class BieService {
 
     private async mergeComponentInfo(bieMetadata: BIEs, libraryName: string): Promise<BIEs> {
 
-        let bies = bieMetadata.bies;
-        for (var i = 0; i < bies.length; i++) {
-
-            const components = (await this.componentService.getAsccpComponents(libraryName, bies[i].branchCreatedWith)).components;
-            for (var j = 0; j < components.length; j++) {
-                if (bies[i].den == components[j].den) {
-                    bies[i].componentTag = components[j].nounBodVerbTag;
-                    bies[i].componentDefinition = components[j].definition;
-                    bies[i].componentState = components[j].state;
-                    bies[i].componentUuid = components[j].uuid;
-                    bies[i].componentState = components[j].state;
-                    bies[i].fromNewComponent = components[j].newComponent;
-                    bies[i].componentSinceReleaseNum = components[j].sinceReleaseNum;
-                    bies[i].componentLastChangedReleaseNum = components[j].updatedReleaseNum;
-                    break;
+        if (bieMetadata?.businessInformationEntities) {
+            let bies = bieMetadata.businessInformationEntities;
+            for (var i = 0; i < bies.length; i++) {
+                const components = (await this.componentService.getAsccpComponents(libraryName, bies[i].branchCreatedWith)).components;
+                for (var j = 0; j < components.length; j++) {
+                    if (bies[i].den == components[j].den) {
+                        bies[i].componentTag = components[j].nounBodVerbTag;
+                        bies[i].componentDefinition = components[j].definition;
+                        bies[i].componentState = components[j].state;
+                        bies[i].componentUuid = components[j].uuid;
+                        bies[i].componentState = components[j].state;
+                        bies[i].fromNewComponent = components[j].newComponent;
+                        bies[i].componentSinceReleaseNum = components[j].sinceReleaseNum;
+                        bies[i].componentLastChangedReleaseNum = components[j].updatedReleaseNum;
+                        break;
+                    }
                 }
             }
         }
@@ -46,7 +47,7 @@ export class BieService {
     }
 
 
-    async getBieSchema(uuid: string, schemaType = 'xsd') {
+    async getBieSchema(libraryName: string, uuid: string, schemaType = 'xsd', state?: string) {
 
         const schemaUrlXsd = this.axiosHelper.getBackendUrl("gateway_external_api.bie_generate_backend_endpoint");
 
@@ -82,27 +83,25 @@ export class BieService {
     }
 
     private async addBieChildren(bies: BIEs): Promise<BiesWithChildren> {
-        let biesWithChildren: BiesWithChildren = JSON.parse(JSON.stringify(bies));
-        let bieChildren: BieWithChildren[] = [];
-        biesWithChildren.bies = bieChildren;
-        console.log(JSON.stringify(bies));
-        if (bies.bies.length > 0) {
-            for (const parentBie of bies.bies) {
-                let childBies: Bie[] = [];
-                for (const childBie of bies.bies) {
-                    if (parentBie.topLevelAsbiepId === childBie.basedTopLevelAsbiepId) {
-                        childBies.push(childBie);
-                    }
-                }
-                const bieWithChildren = JSON.parse(JSON.stringify(parentBie));
-                bieWithChildren.childBies = childBies;
 
+        let biesWithChildren: BieWithChildren[] = [];
+
+        for (const parentBie of bies.businessInformationEntities) {
+            let bieWithChildren: BieWithChildren = JSON.parse(JSON.stringify(parentBie));
+            let childBies: Bie[] = [];
+            for (const childBie of bies.businessInformationEntities) {
+                if (parentBie.topLevelAsbiepId === childBie.basedTopLevelAsbiepId) {
+                    childBies.push(childBie);
+                }
             }
-            biesWithChildren = plainToInstance(BiesWithChildren, { bies: bieChildren },
-                { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
+            bieWithChildren.childBusinessInformationEntities = childBies;
+            biesWithChildren.push(bieWithChildren);
         }
 
-        return biesWithChildren;
+        let biesWithChildrenDto: BiesWithChildren = new BiesWithChildren();
+        biesWithChildrenDto.businessInformationEntities = biesWithChildren;
+
+        return biesWithChildrenDto;
     }
 
 
@@ -134,19 +133,18 @@ export class BieService {
                 this.httpService.get
                     (metadataUrl, axiosConfig)
                     .pipe(map(response => {
-                        var bieList = response.data.list;
+                        var bieList: any[] = response.data.list;
                         bieList.forEach(bie => {
-                            const based = bie.based;
-                            if (based) {
-                                bie.basedTopLevelAsbiepId = based.topLevelAsbiepId;
-                            }
+                            bie.basedTopLevelAsbiepId = bie.based?.topLevelAsbiepId;
                             bie.owner = bie.owner.loginId;
                             bie.branch = bie.release.releaseNum;
                         });
-                        const biesDto = plainToInstance(BIEs, { bies: bieList },
+
+                        const biesDto = plainToInstance(BIEs, { businessInformationEntities: bieList },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
-                        console.log(JSON.stringify(biesDto));
+
                         const mergedBies = this.mergeComponentInfo(biesDto, libraryName);
+
                         return mergedBies;
 
                     }
@@ -165,19 +163,20 @@ export class BieService {
 
 
     async getBiePackageMetadataWithBiesWithChildren(libraryName: string, packageName: string, packageVersionId: string, packageState?: string,): Promise<BiePackageWithBiesWithChildren> {
-        const packageWithBies = await this.getBiePackageMetadataWithBies(libraryName, packageName, packageVersionId, packageState);
-        const bies = packageWithBies.bies;
-        console.log(JSON.stringify(bies));
-        if (bies) {
-            const packageBiesWithChildren = await this.addBieChildren(bies)
-        }
-        let biePackageWithBieChildren = JSON.parse(JSON.stringify(bies));
 
-        biePackageWithBieChildren.bies = biePackageWithBieChildren;
-        const packageWithBiesWithChildren = plainToInstance(BiePackageWithBiesWithChildren,
-            { packageName: packageName, packageVersionId: packageVersionId, bies: biePackageWithBieChildren },
-            { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true })
-        return packageWithBiesWithChildren;
+        const packageWithBies = await this.getBiePackageMetadataWithBies(libraryName, packageName, packageVersionId, packageState);
+        let packageWithBiesWithChildren: BiePackageWithBiesWithChildren = JSON.parse(JSON.stringify(packageWithBies));
+        const bies = packageWithBies.businessInformationEntities;
+
+        if (bies) {
+            const biesWithChildren = await this.addBieChildren(bies);
+            packageWithBiesWithChildren.BIEs = biesWithChildren.businessInformationEntities;
+            return packageWithBiesWithChildren;
+        }
+        else {
+            return packageWithBiesWithChildren;
+        }
+
     }
 
 
@@ -185,21 +184,19 @@ export class BieService {
 
         const packageBiesUrl = this.axiosHelper.getBackendUrl('gateway_external_api.bie_packages_bies_backend_endpoint');
 
-        const biePackages = await this.getBiePackagesMetadata(libraryName, packageState, packageName, packageVersionId);
-        const biePackage = biePackages.biePackages[0];
-
         let axiosConfig = {
             params:
             {
                 libraryName: libraryName,
-                versionName: packageName,
-                versionId: packageVersionId,
+                biePackageName: packageName,
+                biePackageVersionId: packageVersionId,
+                states: packageState,
                 pageSize: -1,
                 pageIndex: -1,
             }
             ,
             validateStatus: function (status: number) {
-                return status == 200; // Resolve only if the status code is 200
+                return status == 200;
             }
         }
 
@@ -207,13 +204,7 @@ export class BieService {
             await firstValueFrom(this.httpService.get
                 (packageBiesUrl, axiosConfig)
                 .pipe(map(response => {
-                    const bieList = response.data.list;
-
-                    const packageWithBies = plainToInstance(BiePackageWithBies,
-                        { packageName: packageName, packageVersionId: packageVersionId, bies: bieList }
-                        , { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
-
-                    return packageWithBies;
+                    return response.data.list;
                 }
                 ))
                 .pipe(
@@ -223,11 +214,27 @@ export class BieService {
                 )
             );
 
-        return biePackageBies;
+        const biePackages = await this.getBiePackagesMetadata(libraryName, packageState);
+        const biePackage = biePackages.biePackages.find(biePackage => { 
+            biePackage.packageName === packageName && biePackage.versionId === packageVersionId });
+        if (biePackage) {
+            console.log(JSON.stringify(biePackage));
+            let biePackageWithBies: BiePackageWithBies = JSON.parse(JSON.stringify(biePackage));
+
+            biePackageWithBies.businessInformationEntities = biePackageBies;
+            console.log(JSON.stringify(biePackageWithBies));
+            const packageWithBiesDto = plainToInstance(BiePackageWithBies, biePackageWithBies
+                , { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
+
+
+            return packageWithBiesDto;
+        }
+
+        throw new HttpException("package not found", HttpStatus.NOT_FOUND);
     }
 
 
-    async getBiePackagesMetadata(libraryName: string, packageState?: string, packageName?: string, packageVersionId?: string): Promise<BiePackages> {
+    async getBiePackagesMetadata(libraryName: string, packageState?: string): Promise<BiePackages> {
 
         const packageUrl = this.axiosHelper.getBackendUrl('gateway_external_api.bie_packages_backend_endpoint');
 
@@ -239,9 +246,7 @@ export class BieService {
                 libraryName: libraryName,
                 pageSize: -1,
                 pageIndex: -1,
-                state: packageState,
-                versionId: packageVersionId,
-                versionName: packageName
+                states: packageState
             }
             ,
             validateStatus: function (status: number) {
@@ -255,7 +260,7 @@ export class BieService {
                     (packageUrl, axiosConfig)
                     .pipe(map(response => {
                         const packages = plainToInstance(BiePackages,
-                            { packageName: packageName, packageVersionId: packageVersionId, biePackages: response.data.list },
+                            { biePackages: response.data.list },
                             { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
                         return packages;
                     }
@@ -269,37 +274,5 @@ export class BieService {
 
         return biePackages;
     }
-
-
-    /*
-        async getBaseBieRelationships(Bie bie) { //libraryName: string, biePackageName?: string, biePackageVersionId?: string): Promise<BieBaseRelations> {
-    
-            const bies = (await this.getAllBieMetadata(libraryName)).bies;
-    
-            const biePackages = (await this.getBiePackageMetadata(libraryName, state, biePackageName, biePackageVersionId)).biePackages;
-            bies = biePackages.find(pkg => pkg.biePackageId === biePackageId)?.BIEs ?? [];
-    
-    
-            let bieBaseRelationsList: BieBaseRelation[] = [];
-            for (const baseBie of bies) {
-                for (const childBie of bies) {
-                    if (baseBie.topLevelAsbiepId === childBie.basedTopLevelAsbiepId) {
-                        let bieBaseRelation = new BieBaseRelation();
-                        bieBaseRelation.baseUuid = baseBie.uuid;
-                        bieBaseRelation.baseDen = baseBie.den;
-                        bieBaseRelation.baseState = baseBie.state;
-                        bieBaseRelation.childUuid = childBie.uuid;
-                        bieBaseRelation.childDen = childBie.den;
-                        bieBaseRelation.childState = childBie.state;
-                        bieBaseRelationsList.push(bieBaseRelation);
-                    }
-    
-                }
-            }
-            const bieBaseRelations = new BieBaseRelations();
-            bieBaseRelations.bieBases = bieBaseRelationsList;
-            return bieBaseRelations;
-        }
-            */
 
 }
