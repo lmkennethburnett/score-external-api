@@ -178,7 +178,7 @@ public class ExternalComponentsController {
                 return response;
         }
 
-        @RequestMapping(value = "/ext/core_component", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        @RequestMapping(value = "/ext/core-component", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public PageResponse<CcListEntryRecord> getCcList(
                         @AuthenticationPrincipal AuthenticatedPrincipal user,
                         @RequestParam(name = "libraryName") String libraryName,
@@ -263,7 +263,7 @@ public class ExternalComponentsController {
 
         }
 
-        @RequestMapping(value = "/ext/core_component/children", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        @RequestMapping(value = "/ext/core-component/children", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public PageResponse<ExternalChildComponentRecord> getCcList(
                         @AuthenticationPrincipal AuthenticatedPrincipal user,
                         @RequestParam(name = "libraryName") String libraryName,
@@ -289,7 +289,7 @@ public class ExternalComponentsController {
          * }
          */
 
-        @RequestMapping(value = "/ext/core_component/export/standalone", method = RequestMethod.GET, produces = MediaType.APPLICATION_XML_VALUE)
+        @RequestMapping(value = "/ext/core-component/export/standalone", method = RequestMethod.GET, produces = MediaType.APPLICATION_XML_VALUE)
         public ResponseEntity<?> exportStandaloneSchema(
                         @RequestParam(name = "libraryName", required = true) String libraryName,
                         @RequestParam(name = "releaseVersion", required = true) String releaseVersion,
@@ -323,7 +323,7 @@ public class ExternalComponentsController {
                 return ResponseEntity.ok("Authenticated");
         }
 
-        @RequestMapping(value = "/ext/find_usages/{type}/{id:[\\d]+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        @RequestMapping(value = "/ext/find-usages/{type}/{id:[\\d]+}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public FindUsagesResponse findUsages(@AuthenticationPrincipal AuthenticatedPrincipal user,
                         @PathVariable("type") String type,
                         @PathVariable("id") BigInteger manifestId) {

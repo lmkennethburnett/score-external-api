@@ -83,7 +83,7 @@ public class ExternalBieController {
         @Autowired
         private ExternalBieService externalBieService;
 
-        @RequestMapping(value = "/ext/bie_list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+        @RequestMapping(value = "/ext/bie-list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
         public PageResponse<BieListEntryRecord> getBieList(
 
                         @RequestParam(name = "libraryName") String libraryName,
