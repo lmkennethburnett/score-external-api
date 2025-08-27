@@ -218,14 +218,10 @@ export class BieService {
         const biePackage = biePackages.biePackages.find(biePackage => { 
             biePackage.packageName === packageName && biePackage.versionId === packageVersionId });
         if (biePackage) {
-            console.log(JSON.stringify(biePackage));
             let biePackageWithBies: BiePackageWithBies = JSON.parse(JSON.stringify(biePackage));
-
             biePackageWithBies.businessInformationEntities = biePackageBies;
-            console.log(JSON.stringify(biePackageWithBies));
             const packageWithBiesDto = plainToInstance(BiePackageWithBies, biePackageWithBies
                 , { excludeExtraneousValues: true, exposeUnsetFields: true, enableImplicitConversion: true });
-
 
             return packageWithBiesDto;
         }

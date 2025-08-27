@@ -105,48 +105,12 @@ export class BieController {
   @CacheTTL(60000)
   findPackages(
     @Query('library') library: string,
+    /*
     @Query('versionId') versionId: string,
     @Query('packageName') packageName: string,
+    */
   ) {
     return this.bieService.getBiePackagesMetadata(library ?? this.componentsService.getDefaultLibrary(), 'Production');
   }
-
-/*
-  @Get('packages/:packageName/:versionId/contents')
-  @ApiQuery({ name: 'versionId', required: false, description: 'Filter by version ID', example: 'v1.0' })
-  @ApiQuery({ name: 'packageName', required: false, description: 'Filter by version name', example: 'Core BIE Package 1.0' })
-  @ApiOkResponse({ description: 'OK', type: BiePackageWithBies })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiOperation({ summary: 'BIEs in package with name and version.  Only BIE Packages in Production state are returned.' })
-  @ApiBearerAuth()
-  @CacheTTL(60000)
-  findPackageBies(
-    @Query('library') library: string,
-    @Param('packageName') packageName: string,
-    @Param('versionId') versionId: string
-  ) {
-    return this.bieService.getBiePackageMetadataWithBies(library ?? this.componentsService.getDefaultLibrary(), packageName, versionId, 'Production');
-  }
-
-  @Get('packages/:name/:versionId/contents/children')
-  @ApiQuery({ name: 'state', required: false, description: 'Filter by specific BIE Package states' })
-  @ApiQuery({ name: 'versionId', required: false, description: 'Filter by version ID', example: 'v1.0' })
-  @ApiQuery({ name: 'packageName', required: false, description: 'Filter by version name', example: 'Core BIE Package 1.0' })
-  @ApiOkResponse({ description: 'OK', type: BiePackageWithBiesWithChildren })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiOperation({
-    summary: 'BIE packages including member BIEs and with member BIE children who are based on those BIEs '
-      + ' that are also in the same package.  Only BIE Packages in Production state are returned.'
-  })
-  @ApiBearerAuth()
-  @CacheTTL(60000)
-  findPackageBiesWithChildren(
-    @Query('library') library: string,
-    @Param('packageName') packageName: string,
-    @Param('versionId') versionId: string
-  ) {
-    return this.bieService.getBiePackageMetadataWithBiesWithChildren(library ?? this.componentsService.getDefaultLibrary(), packageName, versionId, 'Production');
-  }
-*/
 
 }
