@@ -31,6 +31,7 @@ import { BieControllerDeprecated } from './bie/bie.controller_deprecated';
         load: [config],
         isGlobal: true,
         cache: true,
+        ignoreEnvFile: true
       }),
       ThrottlerModule.forRootAsync({
         imports: [ConfigModule],
